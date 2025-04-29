@@ -1,11 +1,13 @@
 package com.citationextractor;
 
 import java.io.File;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
+
+import com.citationextractor.extractor.Extractor;
 
 public class App {
     public static void main(String[] args) {
@@ -13,17 +15,15 @@ public class App {
         File file = new File("src/pdf/test.pdf");
 
         try (PDDocument document = Loader.loadPDF(file)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            String text = stripper.getText(document);
-
+            
             Extractor extractor = new Extractor();
-            List<String> citations = extractor.extractAll(text);
 
+            LinkedHashMap<Integer, List<String>> citationsPerPage = extractor.extractAll(document);
 
-            for (String citation : citations) {
-                System.out.println(citation);
+            for (int i : citationsPerPage.keySet()) {
+                System.out.println("Page " + i + " : " + citationsPerPage.get(i));
             }
-
+            
         } catch (Exception e) {
             System.out.println(e);
         }
