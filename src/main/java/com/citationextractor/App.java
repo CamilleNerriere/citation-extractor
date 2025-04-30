@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
+import com.citationextractor.extractor.Citation;
 import com.citationextractor.extractor.Extractor;
 
 public class App {
@@ -18,11 +19,11 @@ public class App {
             
             Extractor extractor = new Extractor();
 
-            LinkedHashMap<Integer, List<String>> citationsPerPage = extractor.extractAll(document);
+            LinkedHashMap<Integer, List<Citation>> citationsPerPage = extractor.extractAll(document);
 
-            for (int i : citationsPerPage.keySet()) {
-                System.out.println("Page " + i + " : " + citationsPerPage.get(i));
-            }
+            // for (int i : citationsPerPage.keySet()) {
+            //     System.out.println("Page " + i + " : " + citationsPerPage.get(i));
+            // }
             
         } catch (Exception e) {
             System.out.println(e);

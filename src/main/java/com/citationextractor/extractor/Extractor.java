@@ -20,14 +20,15 @@ import org.apache.pdfbox.text.TextPosition;
  */
 public class Extractor {
 
-    public LinkedHashMap<Integer, List<String>> extractAll(PDDocument document) throws IOException {
+    public LinkedHashMap<Integer, List<Citation>> extractAll(PDDocument document) throws IOException {
 
         CustomTextStripper stripper = new CustomTextStripper();
 
         int pageCount = document.getNumberOfPages();
 
-        LinkedHashMap<Integer, List<String>> citationsPerPage = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage = new LinkedHashMap<>();
         LinkedHashMap<Integer, Map<TextPosition, ArrayList<Float>>> notesCandidatesPerPage = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<AnnotatedCitation>> foundCitations = new LinkedHashMap<>();
 
         for (int page = 1; page <= pageCount; page++) {
             stripper.setStartPage(page);
@@ -36,30 +37,61 @@ public class Extractor {
             stripper.clearPositions();
             stripper.getText(document);
             List<TextPosition> positions = stripper.getTextPositions();
-            citationsPerPage.put(page, extractCitationsPerPage(positions));
+            citationsCandidatesPerPage.put(page, extractCitationsPerPage(positions, page));
 
             notesCandidatesPerPage.put(page, getNoteCandidates(positions));
+
+            foundCitations.put(page, getAnnotatedCitations(citationsCandidatesPerPage, notesCandidatesPerPage));
         }
 
-        System.out.println(notesCandidatesPerPage);
-        return citationsPerPage;
+        for (int page : citationsCandidatesPerPage.keySet()) {
+            List<Citation> citations = citationsCandidatesPerPage.get(page);
+            List<AnnotatedCitation> sortedCitations = new ArrayList<>();
+
+            for (Citation citation : citations) {
+                BoundingBox boundingBox = citation.getCoord();
+                float xCitationEnd = boundingBox.getX() + boundingBox.getWidth();
+                float yCitation = boundingBox.getY();
+
+                Map<TextPosition, ArrayList<Float>> notesInPage = notesCandidatesPerPage.get(page);
+
+                for (TextPosition note : notesInPage.keySet()) {
+                    ArrayList<Float> coords = notesInPage.get(note);
+                    Float xNote = coords.get(0);
+                    Float yNote = coords.get(1);
+
+                    float dx = xNote - xCitationEnd;
+                    float dy = Math.abs(yNote - yCitation);
+
+                    if(dx >= -10 && dx < 100 && dy < 25) {
+                        AnnotatedCitation annotatedCitation = new AnnotatedCitation(citation, note);
+                        sortedCitations.add(annotatedCitation);
+                    } 
+                }
+            }
+            foundCitations.put(page, sortedCitations);
+        }
+
+        System.out.println(foundCitations);
+
+        return citationsCandidatesPerPage;
     }
 
-    private List<String> extractCitationsPerPage(List<TextPosition> positions) {
+    private List<Citation> extractCitationsPerPage(List<TextPosition> positions, int page) {
 
-        List<String> citations = new ArrayList<>();
+        List<Citation> citations = new ArrayList<>();
 
         String[] openingQuotes = { "«", "\"", "“" };
 
         for (String opening : openingQuotes) {
-            citations.addAll(extractCitations(positions, opening));
+            citations.addAll(extractCitations(positions, opening, page));
         }
 
         return citations;
     }
 
-    private List<String> extractCitations(List<TextPosition> positions, String c1) {
-        List<String> citations = new ArrayList<>();
+    private List<Citation> extractCitations(List<TextPosition> positions, String c1, int page) {
+        List<Citation> citations = new ArrayList<>();
 
         String c2 = switch (c1) {
             case "«" -> c2 = "»";
@@ -73,14 +105,26 @@ public class Extractor {
             StringBuilder builder = new StringBuilder("");
 
             if (positions.get(i).getUnicode().equals(c1)) {
+
                 start = i;
+
+                // Get citation x,y, width, height
+                float xStart = positions.get(i).getXDirAdj();
+                float y = positions.get(i).getYDirAdj();
+                float width;
+                float height = positions.get(i).getHeightDir();
+
                 for (int j = start; j < positions.size(); j++) {
                     if (!positions.get(j).getUnicode().equals(c2)) {
                         if (!positions.get(j).getUnicode().equals(c1)) {
                             builder.append(positions.get(j).getUnicode());
                         }
                     } else {
-                        citations.add(builder.toString().trim());
+                        float xEnd = positions.get(j).getXDirAdj() + positions.get(j).getWidthDirAdj();
+                        width = xEnd - xStart;
+                        Citation citation = new Citation(builder.toString().trim(), page,
+                                new BoundingBox(xStart, y, width, height));
+                        citations.add(citation);
                         break;
                     }
                 }
@@ -89,11 +133,10 @@ public class Extractor {
         return citations;
     }
 
-    
     private Map<TextPosition, ArrayList<Float>> getNoteCandidates(List<TextPosition> positions) {
 
         float averageFontSize = getAverageFontSize(positions);
-        
+
         Map<TextPosition, ArrayList<Float>> notesWithPositions = new LinkedHashMap<>();
 
         for (TextPosition candidate : positions) {
@@ -105,7 +148,8 @@ public class Extractor {
             float deltaY = candidate.getYDirAdj();
 
             // Doit être un chiffre (chiffre décimal ou caractère comme ¹)
-            if ((type == Character.DECIMAL_DIGIT_NUMBER || type == Character.OTHER_NUMBER) && candidate.getFontSizeInPt() < averageFontSize * 0.75) {
+            if ((type == Character.DECIMAL_DIGIT_NUMBER || type == Character.OTHER_NUMBER)
+                    && candidate.getFontSizeInPt() < averageFontSize * 0.75) {
                 ArrayList<Float> deltas = new ArrayList<>();
                 deltas.add(deltaX);
                 deltas.add(deltaY);
@@ -116,17 +160,17 @@ public class Extractor {
         return notesWithPositions;
     }
 
-    private float getAverageFontSize(List<TextPosition> positions){
+    private float getAverageFontSize(List<TextPosition> positions) {
 
         Map<Float, Integer> sizeStatistics = new LinkedHashMap<>();
 
-        for(TextPosition tp : positions){
+        for (TextPosition tp : positions) {
             String c = tp.getUnicode();
             if (!c.trim().isEmpty()) {
                 float size = tp.getFontSizeInPt();
 
-                if(sizeStatistics.containsKey(size)){
-                    sizeStatistics.put(size, sizeStatistics.get(size) +1);
+                if (sizeStatistics.containsKey(size)) {
+                    sizeStatistics.put(size, sizeStatistics.get(size) + 1);
                 } else {
                     sizeStatistics.put(size, 1);
                 }
@@ -136,9 +180,9 @@ public class Extractor {
         float averageSize = 0f;
         int frequence = 0;
 
-        for(Float size : sizeStatistics.keySet()){
+        for (Float size : sizeStatistics.keySet()) {
             Integer value = sizeStatistics.get(size);
-            if(value > frequence){
+            if (value > frequence) {
                 averageSize = size;
                 frequence = value;
             }
@@ -146,4 +190,35 @@ public class Extractor {
 
         return averageSize;
     }
+
+    private List<AnnotatedCitation> getAnnotatedCitations(LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage, LinkedHashMap<Integer, Map<TextPosition, ArrayList<Float>>> notesCandidatesPerPage){   
+        List<AnnotatedCitation> sortedCitations = new ArrayList<>();
+        for (int page : citationsCandidatesPerPage.keySet()) {
+            List<Citation> citations = citationsCandidatesPerPage.get(page);
+
+            for (Citation citation : citations) {
+                BoundingBox boundingBox = citation.getCoord();
+                float xCitationEnd = boundingBox.getX() + boundingBox.getWidth();
+                float yCitation = boundingBox.getY();
+
+                Map<TextPosition, ArrayList<Float>> notesInPage = notesCandidatesPerPage.get(page);
+
+                for (TextPosition note : notesInPage.keySet()) {
+                    ArrayList<Float> coords = notesInPage.get(note);
+                    Float xNote = coords.get(0);
+                    Float yNote = coords.get(1);
+
+                    float dx = xNote - xCitationEnd;
+                    float dy = Math.abs(yNote - yCitation);
+
+                    if(dx >= -10 && dx < 100 && dy < 25) {
+                        AnnotatedCitation annotatedCitation = new AnnotatedCitation(citation, note);
+                        sortedCitations.add(annotatedCitation);
+                    } 
+                }
+            }
+        }
+        return sortedCitations;
+    }
+
 }
