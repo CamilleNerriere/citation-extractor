@@ -5,7 +5,6 @@
 
 package com.citationextractor.extractor;
 
-import org.apache.pdfbox.text.TextPosition;
 
 /**
  *
@@ -13,19 +12,19 @@ import org.apache.pdfbox.text.TextPosition;
  */
 public class AnnotatedCitation {
     private final Citation baseCitation;
-    private final TextPosition noteChar;
+    private final String noteNumberAString;
 
-    public AnnotatedCitation(final Citation baseCitation, final TextPosition noteChar){
+    public AnnotatedCitation(final Citation baseCitation, final String noteNumberAString){
         this.baseCitation = baseCitation;
-        this.noteChar = noteChar;
+        this.noteNumberAString = noteNumberAString;
     }
 
     public Citation getBaseCitation(){
         return baseCitation;
     }
 
-    public TextPosition getNoteChar(){
-        return noteChar;
+    public String getNoteNumberAString(){
+        return noteNumberAString;
     }
 
     @Override
@@ -35,7 +34,7 @@ public class AnnotatedCitation {
                 ", page=" + baseCitation.getPage() +
                 ", endX=" + baseCitation.getXEnd() +
                 ", endY=" + baseCitation.getYEnd() +
-                ", note=" + noteChar + 
+                ", note=" + noteNumberAString + 
                 '}';
     }
 }
