@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.TextPosition;
@@ -26,6 +27,7 @@ public class Extractor {
         int pageCount = document.getNumberOfPages();
 
         LinkedHashMap<Integer, List<String>> citationsPerPage = new LinkedHashMap<>();
+        LinkedHashMap<Integer, Map<TextPosition, ArrayList<Float>>> notesCandidatesPerPage = new LinkedHashMap<>();
 
         for (int page = 1; page <= pageCount; page++) {
             stripper.setStartPage(page);
@@ -34,10 +36,12 @@ public class Extractor {
             stripper.clearPositions();
             stripper.getText(document);
             List<TextPosition> positions = stripper.getTextPositions();
-            Extractor extractor = new Extractor();
-            citationsPerPage.put(page, extractor.extractCitationsPerPage(positions));
+            citationsPerPage.put(page, extractCitationsPerPage(positions));
+
+            notesCandidatesPerPage.put(page, getNoteCandidates(positions));
         }
 
+        System.out.println(notesCandidatesPerPage);
         return citationsPerPage;
     }
 
@@ -69,7 +73,6 @@ public class Extractor {
             StringBuilder builder = new StringBuilder("");
 
             if (positions.get(i).getUnicode().equals(c1)) {
-                System.out.println("Guillement ouvrant trouvé");
                 start = i;
                 for (int j = start; j < positions.size(); j++) {
                     if (!positions.get(j).getUnicode().equals(c2)) {
@@ -77,8 +80,6 @@ public class Extractor {
                             builder.append(positions.get(j).getUnicode());
                         }
                     } else {
-                        System.out.println("Guillement fermant trouvé");
-                        System.out.println(builder);
                         citations.add(builder.toString().trim());
                         break;
                     }
@@ -86,5 +87,63 @@ public class Extractor {
             }
         }
         return citations;
+    }
+
+    
+    private Map<TextPosition, ArrayList<Float>> getNoteCandidates(List<TextPosition> positions) {
+
+        float averageFontSize = getAverageFontSize(positions);
+        
+        Map<TextPosition, ArrayList<Float>> notesWithPositions = new LinkedHashMap<>();
+
+        for (TextPosition candidate : positions) {
+            String c = candidate.getUnicode();
+
+            char ch = c.charAt(0);
+            int type = Character.getType(ch);
+            float deltaX = candidate.getXDirAdj();
+            float deltaY = candidate.getYDirAdj();
+
+            // Doit être un chiffre (chiffre décimal ou caractère comme ¹)
+            if ((type == Character.DECIMAL_DIGIT_NUMBER || type == Character.OTHER_NUMBER) && candidate.getFontSizeInPt() < averageFontSize * 0.75) {
+                ArrayList<Float> deltas = new ArrayList<>();
+                deltas.add(deltaX);
+                deltas.add(deltaY);
+                notesWithPositions.put(candidate, deltas);
+            }
+        }
+
+        return notesWithPositions;
+    }
+
+    private float getAverageFontSize(List<TextPosition> positions){
+
+        Map<Float, Integer> sizeStatistics = new LinkedHashMap<>();
+
+        for(TextPosition tp : positions){
+            String c = tp.getUnicode();
+            if (!c.trim().isEmpty()) {
+                float size = tp.getFontSizeInPt();
+
+                if(sizeStatistics.containsKey(size)){
+                    sizeStatistics.put(size, sizeStatistics.get(size) +1);
+                } else {
+                    sizeStatistics.put(size, 1);
+                }
+            }
+        }
+
+        float averageSize = 0f;
+        int frequence = 0;
+
+        for(Float size : sizeStatistics.keySet()){
+            Integer value = sizeStatistics.get(size);
+            if(value > frequence){
+                averageSize = size;
+                frequence = value;
+            }
+        }
+
+        return averageSize;
     }
 }
