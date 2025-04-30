@@ -44,34 +44,6 @@ public class Extractor {
             foundCitations.put(page, getAnnotatedCitations(citationsCandidatesPerPage, notesCandidatesPerPage));
         }
 
-        for (int page : citationsCandidatesPerPage.keySet()) {
-            List<Citation> citations = citationsCandidatesPerPage.get(page);
-            List<AnnotatedCitation> sortedCitations = new ArrayList<>();
-
-            for (Citation citation : citations) {
-                BoundingBox boundingBox = citation.getCoord();
-                float xCitationEnd = boundingBox.getX() + boundingBox.getWidth();
-                float yCitation = boundingBox.getY();
-
-                Map<TextPosition, ArrayList<Float>> notesInPage = notesCandidatesPerPage.get(page);
-
-                for (TextPosition note : notesInPage.keySet()) {
-                    ArrayList<Float> coords = notesInPage.get(note);
-                    Float xNote = coords.get(0);
-                    Float yNote = coords.get(1);
-
-                    float dx = xNote - xCitationEnd;
-                    float dy = Math.abs(yNote - yCitation);
-
-                    if(dx >= -10 && dx < 100 && dy < 25) {
-                        AnnotatedCitation annotatedCitation = new AnnotatedCitation(citation, note);
-                        sortedCitations.add(annotatedCitation);
-                    } 
-                }
-            }
-            foundCitations.put(page, sortedCitations);
-        }
-
         System.out.println(foundCitations);
 
         return citationsCandidatesPerPage;
@@ -108,11 +80,10 @@ public class Extractor {
 
                 start = i;
 
-                // Get citation x,y, width, height
-                float xStart = positions.get(i).getXDirAdj();
-                float y = positions.get(i).getYDirAdj();
-                float width;
-                float height = positions.get(i).getHeightDir();
+                // Get first and last char to calculate note positions
+                
+                TextPosition firstChar = positions.get(i);
+                TextPosition lastChar;
 
                 for (int j = start; j < positions.size(); j++) {
                     if (!positions.get(j).getUnicode().equals(c2)) {
@@ -120,10 +91,9 @@ public class Extractor {
                             builder.append(positions.get(j).getUnicode());
                         }
                     } else {
-                        float xEnd = positions.get(j).getXDirAdj() + positions.get(j).getWidthDirAdj();
-                        width = xEnd - xStart;
+                        lastChar = positions.get(j);
                         Citation citation = new Citation(builder.toString().trim(), page,
-                                new BoundingBox(xStart, y, width, height));
+                                firstChar, lastChar);
                         citations.add(citation);
                         break;
                     }
@@ -197,9 +167,9 @@ public class Extractor {
             List<Citation> citations = citationsCandidatesPerPage.get(page);
 
             for (Citation citation : citations) {
-                BoundingBox boundingBox = citation.getCoord();
-                float xCitationEnd = boundingBox.getX() + boundingBox.getWidth();
-                float yCitation = boundingBox.getY();
+
+                float xCitationEnd = citation.getXEnd();
+                float yCitation = citation.getYEnd();
 
                 Map<TextPosition, ArrayList<Float>> notesInPage = notesCandidatesPerPage.get(page);
 

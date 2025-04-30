@@ -5,6 +5,8 @@
 
 package com.citationextractor.extractor;
 
+import org.apache.pdfbox.text.TextPosition;
+
 /**
  *
  * @author camille
@@ -12,12 +14,14 @@ package com.citationextractor.extractor;
 public class Citation {
     private final String text;
     private final int page;
-    private final BoundingBox coord; 
+    TextPosition startPos; // premier caractère
+    TextPosition endPos; // dernier caractère
 
-    public Citation(final String text, final int page, final BoundingBox coord){
+    public Citation(final String text, final int page, final TextPosition startPos, final TextPosition endPos) {
         this.text = text;
         this.page = page;
-        this.coord = coord; 
+        this.startPos = startPos;
+        this.endPos = endPos;
     }
 
     public String getText() {
@@ -28,8 +32,20 @@ public class Citation {
         return page;
     }
 
-    public BoundingBox getCoord() {
-        return coord;
+    public TextPosition getStartPos(){
+        return startPos;
+    }
+
+    public TextPosition getEndPos(){
+        return endPos;
+    }
+
+    public float getXEnd() {
+        return endPos.getXDirAdj() + endPos.getWidthDirAdj();
+    }
+
+    public float getYEnd() {
+        return endPos.getYDirAdj();
     }
 
     @Override
@@ -37,7 +53,8 @@ public class Citation {
         return "Citation{" +
                 "text='" + text + '\'' +
                 ", page=" + page +
-                ", coord=" + coord.toString() +
+                ", startPos=" + startPos +
+                ", endPos=" + endPos +
                 '}';
     }
 }

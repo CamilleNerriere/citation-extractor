@@ -33,7 +33,8 @@ public class AnnotatedCitation {
         return "Citation{" +
                 "text='" + baseCitation.getText() + '\'' +
                 ", page=" + baseCitation.getPage() +
-                ", coord=" + baseCitation.getCoord().toString() +
+                ", endX=" + baseCitation.getXEnd() +
+                ", endY=" + baseCitation.getYEnd() +
                 ", note=" + noteChar + 
                 '}';
     }
