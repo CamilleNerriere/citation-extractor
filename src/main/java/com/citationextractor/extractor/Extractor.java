@@ -30,6 +30,8 @@ public class Extractor {
         LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<AnnotatedCitation>> foundCitations = new LinkedHashMap<>();
 
+        TroncatedCitation troncatedCitationFromLastPage = new TroncatedCitation(null, null);
+
         for (int page = 1; page <= pageCount; page++) {
             stripper.setStartPage(page);
             stripper.setEndPage(page);
@@ -37,7 +39,9 @@ public class Extractor {
             stripper.clearPositions();
             stripper.getText(document);
             List<TextPosition> positions = stripper.getTextPositions();
-            citationsCandidatesPerPage.put(page, extractCitationsPerPage(positions, page));
+            CitationExtractionResult result = extractCitationsPerPage(positions, troncatedCitationFromLastPage, page);
+            citationsCandidatesPerPage.put(page, result.citations());
+            troncatedCitationFromLastPage = result.troncatedCitation();
 
             notesCandidatesPerPage.put(page, getNoteCandidates(positions, page));
 
@@ -50,58 +54,123 @@ public class Extractor {
         return citationsCandidatesPerPage;
     }
 
-    private List<Citation> extractCitationsPerPage(List<TextPosition> positions, int page) {
+    private CitationExtractionResult extractCitationsPerPage(List<TextPosition> positions,
+            TroncatedCitation troncatedCitationFromLastPage, int page) {
 
-        List<Citation> citations = new ArrayList<>();
+        List<Citation> allCitations = new ArrayList<>();
+        TroncatedCitation updatedTroncated = troncatedCitationFromLastPage;
 
         String[] openingQuotes = { "«", "\"", "“" };
 
         for (String opening : openingQuotes) {
-            citations.addAll(extractCitations(positions, opening, page));
+            String content = (updatedTroncated != null && opening.equals(updatedTroncated.openingQuote()))
+                    ? updatedTroncated.content()
+                    : null;
+            TroncatedCitation troncatedToPass = new TroncatedCitation(content, opening);
+            CitationExtractionResult result = extractCitations(positions, opening, troncatedToPass, page);
+            allCitations.addAll(result.citations());
+
+            if (result.troncatedCitation().isEmpty() == false) {
+                updatedTroncated = result.troncatedCitation();
+            } else if (updatedTroncated != null && opening.equals(updatedTroncated.openingQuote())) {
+                updatedTroncated = new TroncatedCitation(null, null);
+
+            }
         }
 
-        return citations;
+        return new CitationExtractionResult(allCitations, updatedTroncated);
     }
 
-    private List<Citation> extractCitations(List<TextPosition> positions, String c1, int page) {
+    private CitationExtractionResult extractCitations(List<TextPosition> positions, String openingQuote,
+            TroncatedCitation troncatedCitationFromLastPage, int page) {
+
         List<Citation> citations = new ArrayList<>();
 
-        String c2 = switch (c1) {
-            case "«" -> c2 = "»";
-            case "\"" -> c2 = "\"";
-            case "“" -> c2 = "”";
-            default -> throw new IllegalArgumentException("Unauthorized Opening Quote" + c1);
-        };
+        String truncContent = troncatedCitationFromLastPage.content();
+        String truncOpeningQuote = troncatedCitationFromLastPage.openingQuote();
+
+        if (!troncatedCitationFromLastPage.isEmpty()) {
+            OneCitationResult citationResult = extractOneCitation(positions,
+                    troncatedCitationFromLastPage.openingQuote(),
+                    troncatedCitationFromLastPage.content(), page, 0);
+
+                    System.out.println(citationResult.citation().toString());
+
+            if (citationResult.citation() != null) {
+                citations.add(citationResult.citation());
+                System.out.println(citations);
+                truncContent = "";
+            } else {
+                System.out.println("Cest null");
+                truncContent = citationResult.trunc().content();
+                truncOpeningQuote = citationResult.trunc().openingQuote();
+            }
+
+        }
+
+        System.out.println(citations);
 
         for (int i = 0; i < positions.size(); i++) {
-            int start;
-            StringBuilder builder = new StringBuilder("");
-
-            if (positions.get(i).getUnicode().equals(c1)) {
-
-                start = i;
-
-                // Get first and last char to calculate note positions
-
-                TextPosition firstChar = positions.get(i);
-                TextPosition lastChar;
-
-                for (int j = start; j < positions.size(); j++) {
-                    if (!positions.get(j).getUnicode().equals(c2)) {
-                        if (!positions.get(j).getUnicode().equals(c1)) {
-                            builder.append(positions.get(j).getUnicode());
-                        }
-                    } else {
-                        lastChar = positions.get(j);
-                        Citation citation = new Citation(builder.toString().trim(), page,
-                                firstChar, lastChar);
-                        citations.add(citation);
-                        break;
-                    }
+            if (positions.get(i).getUnicode().equals(openingQuote)) {
+                OneCitationResult citationResult = extractOneCitation(positions, openingQuote, "", page, i);
+                if (citationResult.citation() != null) {
+                    citations.add(citationResult.citation());
+                    truncContent = "";
+                } else {
+                    truncContent = citationResult.trunc().content();
+                    truncOpeningQuote = citationResult.trunc().openingQuote();
                 }
             }
         }
-        return citations;
+        
+        System.out.println(citations);
+        return new CitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
+    }
+
+    private OneCitationResult extractOneCitation(List<TextPosition> positions, String openingQuote,
+            String remainingTextFromLastPage, int page, int start) {
+
+        String c1 = openingQuote;
+        StringBuilder citationContent = new StringBuilder(remainingTextFromLastPage);
+        Boolean isClosed = false;
+
+        String c2 = switch (c1) {
+            case "«" -> "»";
+            case "\"" -> "\"";
+            case "“" -> "”";
+            default -> throw new IllegalArgumentException("Unauthorized Opening Quote" + c1);
+        };
+
+        // Get first and last char to calculate note positions
+
+        TextPosition firstChar = positions.get(start);
+        TextPosition lastChar = null;
+
+        for (int j = start; j < positions.size(); j++) {
+
+            String currentChar = positions.get(j).getUnicode();
+
+            if (!currentChar.equals(c2)) {
+                if (!currentChar.equals(c1)) {
+                    citationContent.append(positions.get(j).getUnicode());
+                }
+            } else {
+                lastChar = positions.get(j);
+                isClosed = true;
+                break;
+
+            }
+        }
+
+        if (isClosed) {
+            Citation citation = new Citation(citationContent.toString().trim(), page,
+                    firstChar, lastChar, c1);
+            TroncatedCitation trunc = new TroncatedCitation(null, null);
+            return new OneCitationResult(citation, trunc);
+        }
+
+        return new OneCitationResult(null, new TroncatedCitation(citationContent.toString(), openingQuote));
+
     }
 
     private List<NoteCandidate> getNoteCandidates(List<TextPosition> positions, int page) {

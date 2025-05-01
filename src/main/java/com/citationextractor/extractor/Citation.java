@@ -14,14 +14,16 @@ import org.apache.pdfbox.text.TextPosition;
 public class Citation {
     private final String text;
     private final int page;
-    TextPosition startPos; // premier caractère
-    TextPosition endPos; // dernier caractère
+    private final TextPosition startPos; // premier caractère
+    private final TextPosition endPos; // dernier caractère
+    private final String openingQuote;
 
-    public Citation(final String text, final int page, final TextPosition startPos, final TextPosition endPos) {
+    public Citation(final String text, final int page, final TextPosition startPos, final TextPosition endPos, final String openingQuote) {
         this.text = text;
         this.page = page;
         this.startPos = startPos;
         this.endPos = endPos;
+        this.openingQuote = openingQuote;
     }
 
     public String getText() {
@@ -46,6 +48,10 @@ public class Citation {
 
     public float getYEnd() {
         return endPos.getYDirAdj();
+    }
+
+    public String getOpeningQuote() {
+        return openingQuote;
     }
 
     @Override
