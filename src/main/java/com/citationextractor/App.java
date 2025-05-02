@@ -8,7 +8,9 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import com.citationextractor.extractor.Extractor;
+import com.citationextractor.extractor.citation.CitationAnnotator;
 import com.citationextractor.extractor.citation.CitationExtractor;
+import com.citationextractor.extractor.citation.ICitationAnnotator;
 import com.citationextractor.extractor.citation.ICitationExtractor;
 import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.extractor.note.NoteDetector;
@@ -26,7 +28,8 @@ public class App {
             IFontStats fontStats = new FontStats();
             INoteDetector noteDetector = new NoteDetector();
             ICitationExtractor citationExtractor = new CitationExtractor();
-            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor);
+            ICitationAnnotator citationAnnotator = new CitationAnnotator();
+            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator);
 
             LinkedHashMap<Integer, List<Citation>> citationsPerPage = extractor.extractAll(document);
 

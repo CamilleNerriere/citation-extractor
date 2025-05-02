@@ -1,14 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.citationextractor.model;
 
-/**
- *
- * @author camille
- */
 public class NoteCandidate {
     private final String text;
     private final int page;

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 
 package com.citationextractor.extractor.note;
 
@@ -13,10 +9,6 @@ import org.apache.pdfbox.text.TextPosition;
 import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.NoteCandidate;
 
-/**
- *
- * @author camille
- */
 public class NoteDetector implements INoteDetector{
 
     @Override

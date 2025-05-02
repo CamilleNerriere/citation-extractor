@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 
 package com.citationextractor.utils;
 
@@ -11,10 +7,6 @@ import java.util.Map;
 
 import org.apache.pdfbox.text.TextPosition;
 
-/**
- *
- * @author camille
- */
 public class FontStats implements IFontStats{
     @Override
     public float getAverageFontSize(List<TextPosition> positions) {

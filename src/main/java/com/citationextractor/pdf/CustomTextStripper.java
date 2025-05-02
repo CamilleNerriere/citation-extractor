@@ -1,8 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.citationextractor.pdf;
 
 import java.io.IOException;
@@ -12,10 +7,6 @@ import java.util.List;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 
-/**
- *
- * @author camille
- */
 public class CustomTextStripper extends PDFTextStripper{
     private final List<TextPosition> positions = new ArrayList<>();
 

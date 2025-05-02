@@ -1,18 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-
 package com.citationextractor.extractor.context;
 
 import java.util.List;
 
 import org.apache.pdfbox.text.TextPosition;
 
-/**
- *
- * @author camille
- */
 public class ExtractionContext {
     private final List<TextPosition> positions;
     private final int page;
