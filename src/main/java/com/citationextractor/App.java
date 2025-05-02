@@ -7,8 +7,14 @@ import java.util.List;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
-import com.citationextractor.extractor.Citation;
 import com.citationextractor.extractor.Extractor;
+import com.citationextractor.extractor.citation.CitationExtractor;
+import com.citationextractor.extractor.citation.ICitationExtractor;
+import com.citationextractor.extractor.note.INoteDetector;
+import com.citationextractor.extractor.note.NoteDetector;
+import com.citationextractor.model.Citation;
+import com.citationextractor.utils.FontStats;
+import com.citationextractor.utils.IFontStats;
 
 public class App {
     public static void main(String[] args) {
@@ -17,7 +23,10 @@ public class App {
 
         try (PDDocument document = Loader.loadPDF(file)) {
             
-            Extractor extractor = new Extractor();
+            IFontStats fontStats = new FontStats();
+            INoteDetector noteDetector = new NoteDetector();
+            ICitationExtractor citationExtractor = new CitationExtractor();
+            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor);
 
             LinkedHashMap<Integer, List<Citation>> citationsPerPage = extractor.extractAll(document);
 

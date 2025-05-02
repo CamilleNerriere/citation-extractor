@@ -9,16 +9,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.TextPosition;
+
+import com.citationextractor.extractor.citation.ICitationExtractor;
+import com.citationextractor.extractor.context.ExtractionContext;
+import com.citationextractor.extractor.note.INoteDetector;
+import com.citationextractor.model.AnnotatedCitation;
+import com.citationextractor.model.Citation;
+import com.citationextractor.model.CitationExtractionResult;
+import com.citationextractor.model.NoteCandidate;
+import com.citationextractor.model.TroncatedCitation;
+import com.citationextractor.pdf.CustomTextStripper;
+import com.citationextractor.utils.IFontStats;
 
 /**
  *
  * @author camille
  */
 public class Extractor {
+
+    private final IFontStats fontStats;
+    private final INoteDetector noteDetector;
+    private final ICitationExtractor citationExtractor;
+
+    public Extractor(final IFontStats fontStats, final INoteDetector noteDetector, final ICitationExtractor citationExtractor){
+        this.fontStats = fontStats;
+        this.noteDetector = noteDetector;
+        this.citationExtractor = citationExtractor;
+    }
 
     public LinkedHashMap<Integer, List<Citation>> extractAll(PDDocument document) throws IOException {
 
@@ -39,14 +59,20 @@ public class Extractor {
             stripper.clearPositions();
             stripper.getText(document);
 
-            // first : we get everything that's between quotation marks
+            // set extraction context 
             List<TextPosition> positions = stripper.getTextPositions();
-            CitationExtractionResult result = extractCitationsPerPage(positions, troncatedCitationFromLastPage, page);
+            float avgFontSize = fontStats.getAverageFontSize(positions);
+            float medianFontSize = fontStats.getMedianSize(positions);
+            ExtractionContext context = new ExtractionContext(positions, page, avgFontSize, medianFontSize);
+
+            // first : we get everything that's between quotation marks
+
+            CitationExtractionResult result = citationExtractor.extractCitationsPerPage(context, troncatedCitationFromLastPage);
             citationsCandidatesPerPage.put(page, result.citations());
             troncatedCitationFromLastPage = result.troncatedCitation();
 
             // second : we get all small number that can be a note calls
-            notesCandidatesPerPage.put(page, getNoteCandidates(positions, page));
+            notesCandidatesPerPage.put(page, noteDetector.getNoteCandidates(positions, page, avgFontSize));
 
             // third : we match to eleminate text between quotation marks that is note
             // citation
@@ -58,236 +84,126 @@ public class Extractor {
         return citationsCandidatesPerPage;
     }
 
-    private CitationExtractionResult extractCitationsPerPage(List<TextPosition> positions,
-            TroncatedCitation troncatedCitationFromLastPage, int page) {
+    // private CitationExtractionResult extractCitationsPerPage(List<TextPosition> positions,
+    //         TroncatedCitation troncatedCitationFromLastPage, int page) {
 
-        List<Citation> allCitations = new ArrayList<>();
-        TroncatedCitation updatedTroncated = troncatedCitationFromLastPage;
+    //     List<Citation> allCitations = new ArrayList<>();
+    //     TroncatedCitation updatedTroncated = troncatedCitationFromLastPage;
 
-        String[] openingQuotes = { "«", "\"", "“" };
+    //     String[] openingQuotes = { "«", "\"", "“" };
 
-        for (String opening : openingQuotes) {
-            String content = (updatedTroncated != null && opening.equals(updatedTroncated.openingQuote()))
-                    ? updatedTroncated.content()
-                    : null;
-            TroncatedCitation troncatedToPass = new TroncatedCitation(content, opening);
-            CitationExtractionResult result = extractCitations(positions, opening, troncatedToPass, page);
-            allCitations.addAll(result.citations());
+    //     for (String opening : openingQuotes) {
+    //         String content = (updatedTroncated != null && opening.equals(updatedTroncated.openingQuote()))
+    //                 ? updatedTroncated.content()
+    //                 : null;
+    //         TroncatedCitation troncatedToPass = new TroncatedCitation(content, opening);
+    //         CitationExtractionResult result = extractCitations(positions, opening, troncatedToPass, page);
+    //         allCitations.addAll(result.citations());
 
-            if (result.troncatedCitation().isEmpty() == false) {
-                updatedTroncated = result.troncatedCitation();
-            } else if (updatedTroncated != null && opening.equals(updatedTroncated.openingQuote())) {
-                updatedTroncated = new TroncatedCitation(null, null);
+    //         if (result.troncatedCitation().isEmpty() == false) {
+    //             updatedTroncated = result.troncatedCitation();
+    //         } else if (updatedTroncated != null && opening.equals(updatedTroncated.openingQuote())) {
+    //             updatedTroncated = new TroncatedCitation(null, null);
 
-            }
-        }
+    //         }
+    //     }
 
-        return new CitationExtractionResult(allCitations, updatedTroncated);
-    }
+    //     return new CitationExtractionResult(allCitations, updatedTroncated);
+    // }
 
-    private CitationExtractionResult extractCitations(List<TextPosition> positions, String openingQuote,
-            TroncatedCitation troncatedCitationFromLastPage, int page) {
+    // private CitationExtractionResult extractCitations(List<TextPosition> positions, String openingQuote,
+    //         TroncatedCitation troncatedCitationFromLastPage, int page) {
 
-        List<Citation> citations = new ArrayList<>();
+    //     List<Citation> citations = new ArrayList<>();
 
-        String truncContent = troncatedCitationFromLastPage.content();
-        String truncOpeningQuote = troncatedCitationFromLastPage.openingQuote();
+    //     String truncContent = troncatedCitationFromLastPage.content();
+    //     String truncOpeningQuote = troncatedCitationFromLastPage.openingQuote();
 
-        if (!troncatedCitationFromLastPage.isEmpty()) {
-            OneCitationResult citationResult = extractOneCitation(positions,
-                    troncatedCitationFromLastPage.openingQuote(),
-                    troncatedCitationFromLastPage.content(), page, 0);
+    //     if (!troncatedCitationFromLastPage.isEmpty()) {
+    //         OneCitationResult citationResult = extractOneCitation(positions,
+    //                 troncatedCitationFromLastPage.openingQuote(),
+    //                 troncatedCitationFromLastPage.content(), page, 0);
 
-            if (citationResult.citation() != null) {
-                citations.add(citationResult.citation());
-                truncContent = "";
-            } else {
-                truncContent = citationResult.trunc().content();
-                truncOpeningQuote = citationResult.trunc().openingQuote();
-            }
+    //         if (citationResult.citation() != null) {
+    //             citations.add(citationResult.citation());
+    //             truncContent = "";
+    //         } else {
+    //             truncContent = citationResult.trunc().content();
+    //             truncOpeningQuote = citationResult.trunc().openingQuote();
+    //         }
 
-        }
+    //     }
 
-        for (int i = 0; i < positions.size(); i++) {
-            if (positions.get(i).getUnicode().equals(openingQuote)) {
-                OneCitationResult citationResult = extractOneCitation(positions, openingQuote, "", page, i);
-                if (citationResult.citation() != null) {
-                    citations.add(citationResult.citation());
-                    truncContent = "";
-                } else {
-                    truncContent = citationResult.trunc().content();
-                    truncOpeningQuote = citationResult.trunc().openingQuote();
-                }
-            }
-        }
+    //     for (int i = 0; i < positions.size(); i++) {
+    //         if (positions.get(i).getUnicode().equals(openingQuote)) {
+    //             OneCitationResult citationResult = extractOneCitation(positions, openingQuote, "", page, i);
+    //             if (citationResult.citation() != null) {
+    //                 citations.add(citationResult.citation());
+    //                 truncContent = "";
+    //             } else {
+    //                 truncContent = citationResult.trunc().content();
+    //                 truncOpeningQuote = citationResult.trunc().openingQuote();
+    //             }
+    //         }
+    //     }
 
-        return new CitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
-    }
+    //     return new CitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
+    // }
 
-    private OneCitationResult extractOneCitation(List<TextPosition> positions, String openingQuote,
-            String remainingTextFromLastPage, int page, int start) {
+    // private OneCitationResult extractOneCitation(List<TextPosition> positions, String openingQuote,
+    //         String remainingTextFromLastPage, int page, int start) {
 
-        Float avgFontSize = getAverageFontSize(positions);
-        Float medianeFontSize = getMedianeSize(positions);
+    //     Float medianeFontSize = fontStats.getMedianeSize(positions);
 
-        String c1 = openingQuote;
-        StringBuilder citationContent = new StringBuilder(remainingTextFromLastPage);
-        Boolean isClosed = false;
+    //     String c1 = openingQuote;
+    //     StringBuilder citationContent = new StringBuilder(remainingTextFromLastPage);
+    //     Boolean isClosed = false;
 
-        String c2 = switch (c1) {
-            case "«" -> "»";
-            case "\"" -> "\"";
-            case "“" -> "”";
-            default -> throw new IllegalArgumentException("Unauthorized Opening Quote" + c1);
-        };
+    //     String c2 = switch (c1) {
+    //         case "«" -> "»";
+    //         case "\"" -> "\"";
+    //         case "“" -> "”";
+    //         default -> throw new IllegalArgumentException("Unauthorized Opening Quote" + c1);
+    //     };
 
-        // Get first and last char to calculate note positions
+    //     // Get first and last char to calculate note positions
 
-        TextPosition firstChar = positions.get(start);
-        TextPosition lastChar = null;
+    //     TextPosition firstChar = positions.get(start);
+    //     TextPosition lastChar = null;
 
-        for (int j = start; j < positions.size(); j++) {
+    //     for (int j = start; j < positions.size(); j++) {
 
-            TextPosition currentCharAsPosition = positions.get(j);
-            String currentChar = currentCharAsPosition.getUnicode();
+    //         TextPosition currentCharAsPosition = positions.get(j);
+    //         String currentChar = currentCharAsPosition.getUnicode();
 
-            if (!currentChar.equals(c2)) {
+    //         if (!currentChar.equals(c2)) {
 
-                if (currentCharAsPosition.getFontSizeInPt() < medianeFontSize * 0.95) {
-                    continue;
-                }
+    //             if (currentCharAsPosition.getFontSizeInPt() < medianeFontSize * 0.95) {
+    //                 continue;
+    //             }
 
-                if (!currentChar.equals(c1)) {
-                    citationContent.append(positions.get(j).getUnicode());
-                }
-            } else {
-                lastChar = positions.get(j);
-                isClosed = true;
-                break;
+    //             if (!currentChar.equals(c1)) {
+    //                 citationContent.append(positions.get(j).getUnicode());
+    //             }
+    //         } else {
+    //             lastChar = positions.get(j);
+    //             isClosed = true;
+    //             break;
 
-            }
-        }
+    //         }
+    //     }
 
-        if (isClosed) {
-            Citation citation = new Citation(citationContent.toString().trim(), page,
-                    firstChar, lastChar, c1);
-            TroncatedCitation trunc = new TroncatedCitation(null, null);
-            return new OneCitationResult(citation, trunc);
-        }
+    //     if (isClosed) {
+    //         Citation citation = new Citation(citationContent.toString().trim(), page,
+    //                 firstChar, lastChar, c1);
+    //         TroncatedCitation trunc = new TroncatedCitation(null, null);
+    //         return new OneCitationResult(citation, trunc);
+    //     }
 
-        return new OneCitationResult(null, new TroncatedCitation(citationContent.toString(), openingQuote));
+    //     return new OneCitationResult(null, new TroncatedCitation(citationContent.toString(), openingQuote));
 
-    }
+    // }
 
-    private List<NoteCandidate> getNoteCandidates(List<TextPosition> positions, int page) {
-
-        float averageFontSize = getAverageFontSize(positions);
-
-        List<NoteCandidate> noteCandidates = new ArrayList<>();
-
-        TextPosition lastNumberFound = null;
-        StringBuilder completeNote = new StringBuilder("");
-        float xStart = 0;
-        float yStart = 0;
-
-        for (TextPosition candidate : positions) {
-            String c = candidate.getUnicode();
-            if (c == null || c.length() == 0)
-                continue;
-
-            char ch = c.charAt(0);
-            int type = Character.getType(ch);
-
-            // Doit être un chiffre (chiffre décimal ou caractère comme ¹)
-            if ((type == Character.DECIMAL_DIGIT_NUMBER || type == Character.OTHER_NUMBER)
-                    && candidate.getFontSizeInPt() < averageFontSize * 0.75) {
-
-                // a previous number has been found
-                if (lastNumberFound != null) {
-
-                    float deltaX = Math.abs(candidate.getXDirAdj() - lastNumberFound.getXDirAdj());
-                    float deltaY = Math.abs(candidate.getYDirAdj() - lastNumberFound.getYDirAdj());
-
-                    if (deltaX < 10 && deltaY < 10) { // it's close
-                        completeNote.append(candidate.getUnicode());
-                    } else { // it's not close -> start a new note
-                        if (completeNote.length() > 0) {
-                            noteCandidates.add(new NoteCandidate(completeNote.toString(), page, xStart, yStart));
-                        }
-                        completeNote.setLength(0);
-                        completeNote.append(candidate.getUnicode());
-                        xStart = candidate.getXDirAdj();
-                        yStart = candidate.getYDirAdj();
-                    }
-                } else { // complete note is empty -> start a new note
-                    completeNote.setLength(0);
-                    completeNote.append(candidate.getUnicode());
-                    xStart = candidate.getXDirAdj();
-                    yStart = candidate.getYDirAdj();
-                }
-
-                lastNumberFound = candidate;
-            }
-
-        }
-
-        if (completeNote.length() > 0) {
-            noteCandidates.add(new NoteCandidate(completeNote.toString(), page, xStart, yStart));
-        }
-
-        return noteCandidates;
-    }
-
-    private float getAverageFontSize(List<TextPosition> positions) {
-
-        Map<Float, Integer> sizeStatistics = new LinkedHashMap<>();
-
-        for (TextPosition tp : positions) {
-            String c = tp.getUnicode();
-            if (!c.trim().isEmpty()) {
-                float size = tp.getFontSizeInPt();
-
-                if (sizeStatistics.containsKey(size)) {
-                    sizeStatistics.put(size, sizeStatistics.get(size) + 1);
-                } else {
-                    sizeStatistics.put(size, 1);
-                }
-            }
-        }
-
-        float averageSize = 0f;
-        int frequence = 0;
-
-        for (Float size : sizeStatistics.keySet()) {
-            Integer value = sizeStatistics.get(size);
-            if (value > frequence) {
-                averageSize = size;
-                frequence = value;
-            }
-        }
-
-        return averageSize;
-    }
-
-    private float getMedianeSize(List<TextPosition> positions) {
-        List<Float> sizes = positions.stream()
-                .map(pos -> pos.getFontSizeInPt())
-                .filter(size -> size > 4 && size < 25) 
-                .sorted()
-                .toList();
-        
-                int listSize = sizes.size();
-                float median = 0;
-
-                if(listSize%2 !=0){
-                    median = sizes.get(listSize/2);
-                } else {
-                    median = (sizes.get(listSize/2 - 1) + sizes.get(listSize/2)) / 2;
-                }
-
-                return median;
-
-    }
 
     private List<AnnotatedCitation> getAnnotatedCitations(
             LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage,

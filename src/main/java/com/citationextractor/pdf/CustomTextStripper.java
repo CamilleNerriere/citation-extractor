@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 
-package com.citationextractor.extractor;
+package com.citationextractor.pdf;
 
 import java.io.IOException;
 import java.util.ArrayList;

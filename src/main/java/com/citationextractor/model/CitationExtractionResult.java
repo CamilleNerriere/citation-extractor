@@ -3,14 +3,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Record.java to edit this template
  */
 
-package com.citationextractor.extractor;
+package com.citationextractor.model;
+
+import java.util.List;
 
 /**
  *
  * @author camille
  */
-public record TroncatedCitation(String content, String openingQuote) {
-    public boolean isEmpty() {
-        return content == null || content.isEmpty();
-    }
+public record CitationExtractionResult(List<Citation> citations, TroncatedCitation troncatedCitation) {
+
 }

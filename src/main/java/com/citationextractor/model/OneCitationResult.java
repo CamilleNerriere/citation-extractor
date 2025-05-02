@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Record.java to edit this template
  */
 
-package com.citationextractor.extractor;
+package com.citationextractor.model;
 
 /**
  *
