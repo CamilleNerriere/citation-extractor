@@ -49,8 +49,13 @@ public class Extractor {
                     notesCandidatesPerPage, page));
         }
 
-        System.out.println(foundCitations);
+        Citation citationOnMultiplePage = citationsCandidatesPerPage.get(8).get(0);
+        // System.out.println("X end :" + citationOnMultiplePage.getXEnd());
+        // System.out.println("Y end :" + citationOnMultiplePage.getYEnd());
 
+        // System.out.println(notesCandidatesPerPage.get(8).get(0));
+
+        System.out.println(foundCitations);
         return citationsCandidatesPerPage;
     }
 
@@ -94,21 +99,15 @@ public class Extractor {
                     troncatedCitationFromLastPage.openingQuote(),
                     troncatedCitationFromLastPage.content(), page, 0);
 
-                    System.out.println(citationResult.citation().toString());
-
             if (citationResult.citation() != null) {
                 citations.add(citationResult.citation());
-                System.out.println(citations);
                 truncContent = "";
             } else {
-                System.out.println("Cest null");
                 truncContent = citationResult.trunc().content();
                 truncOpeningQuote = citationResult.trunc().openingQuote();
             }
 
         }
-
-        System.out.println(citations);
 
         for (int i = 0; i < positions.size(); i++) {
             if (positions.get(i).getUnicode().equals(openingQuote)) {
@@ -123,7 +122,6 @@ public class Extractor {
             }
         }
         
-        System.out.println(citations);
         return new CitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
     }
 
@@ -285,7 +283,7 @@ public class Extractor {
                 float dx = xNote - xCitationEnd;
                 float dy = Math.abs(yNote - yCitation);
 
-                if (dx >= 0 && dx < 20 && dy < 25) {
+                if (dx >= -1 && dx < 20 && dy < 25) {
                     AnnotatedCitation annotatedCitation = new AnnotatedCitation(citation, note.getText());
                     sortedCitations.add(annotatedCitation);
                 }
