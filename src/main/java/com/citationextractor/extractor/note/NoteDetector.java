@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.pdfbox.text.TextPosition;
 
+import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.NoteCandidate;
 
 /**
@@ -19,7 +20,11 @@ import com.citationextractor.model.NoteCandidate;
 public class NoteDetector implements INoteDetector{
 
     @Override
-    public List<NoteCandidate> getNoteCandidates(List<TextPosition> positions, int page, float avgFontSize) {
+    public List<NoteCandidate> getNoteCandidates(ExtractionContext context) {
+
+        List<TextPosition> positions = context.getPositions();
+        int page = context.getPage();
+        float avgFontSize = context.getAverageFontSize();
 
         List<NoteCandidate> noteCandidates = new ArrayList<>();
 

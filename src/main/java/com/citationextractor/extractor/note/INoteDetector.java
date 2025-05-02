@@ -7,8 +7,7 @@ package com.citationextractor.extractor.note;
 
 import java.util.List;
 
-import org.apache.pdfbox.text.TextPosition;
-
+import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.NoteCandidate;
 
 /**
@@ -16,5 +15,5 @@ import com.citationextractor.model.NoteCandidate;
  * @author camille
  */
 public interface INoteDetector {
-    List<NoteCandidate> getNoteCandidates(List<TextPosition> positions, int page, float avgFontSize);
+    List<NoteCandidate> getNoteCandidates(ExtractionContext context);
 }
