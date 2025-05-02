@@ -16,10 +16,12 @@ public class NoteDetector implements INoteDetector {
 
         List<NoteCandidate> noteCandidates = new ArrayList<>();
         List<NoteCandidate> harvardCandidates = getHarvardNoteCandidates(context);
-        List<NoteCandidate> tradCandidates = getHarvardNoteCandidates(context);
+        List<NoteCandidate> tradCandidates = getTradNoteCandidates(context);
 
         noteCandidates.addAll(harvardCandidates);
         noteCandidates.addAll(tradCandidates);
+
+        System.out.println(noteCandidates);
 
         return noteCandidates;
     }
@@ -101,7 +103,7 @@ public class NoteDetector implements INoteDetector {
         boolean isCitationCandidate = false;
 
         StringBuilder completeNote = new StringBuilder();
-        String styleType = "note";
+        String styleType = "harvard";
 
         for (TextPosition candidate : positions) {
             String c = candidate.getUnicode();
