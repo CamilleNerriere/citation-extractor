@@ -9,21 +9,35 @@ import org.apache.pdfbox.text.TextPosition;
 import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.NoteCandidate;
 
-public class NoteDetector implements INoteDetector{
+public class NoteDetector implements INoteDetector {
 
     @Override
     public List<NoteCandidate> getNoteCandidates(ExtractionContext context) {
+
+        List<NoteCandidate> noteCandidates = new ArrayList<>();
+        List<NoteCandidate> harvardCandidates = getHarvardNoteCandidates(context);
+        List<NoteCandidate> tradCandidates = getHarvardNoteCandidates(context);
+
+        noteCandidates.addAll(harvardCandidates);
+        noteCandidates.addAll(tradCandidates);
+
+        return noteCandidates;
+    }
+
+    @Override
+    public List<NoteCandidate> getTradNoteCandidates(ExtractionContext context) {
 
         List<TextPosition> positions = context.getPositions();
         int page = context.getPage();
         float avgFontSize = context.getAverageFontSize();
 
-        List<NoteCandidate> noteCandidates = new ArrayList<>();
+        List<NoteCandidate> noteCandidates = new ArrayList<>(); // ici on va venir récupérer les notes nombre
 
         TextPosition lastNumberFound = null;
         StringBuilder completeNote = new StringBuilder("");
         float xStart = 0;
         float yStart = 0;
+        String styleType = "note";
 
         for (TextPosition candidate : positions) {
             String c = candidate.getUnicode();
@@ -47,7 +61,8 @@ public class NoteDetector implements INoteDetector{
                         completeNote.append(candidate.getUnicode());
                     } else { // it's not close -> start a new note
                         if (completeNote.length() > 0) {
-                            noteCandidates.add(new NoteCandidate(completeNote.toString(), page, xStart, yStart));
+                            noteCandidates
+                                    .add(new NoteCandidate(completeNote.toString(), page, xStart, yStart, styleType));
                         }
                         completeNote.setLength(0);
                         completeNote.append(candidate.getUnicode());
@@ -67,9 +82,64 @@ public class NoteDetector implements INoteDetector{
         }
 
         if (completeNote.length() > 0) {
-            noteCandidates.add(new NoteCandidate(completeNote.toString(), page, xStart, yStart));
+            noteCandidates.add(new NoteCandidate(completeNote.toString(), page, xStart, yStart, styleType));
         }
 
+        return noteCandidates;
+    }
+
+    @Override
+    public List<NoteCandidate> getHarvardNoteCandidates(ExtractionContext context) {
+
+        List<TextPosition> positions = context.getPositions();
+        int page = context.getPage();
+
+        List<NoteCandidate> noteCandidates = new ArrayList<>(); // ici on va venir récupérer les notes harvard
+
+        TextPosition closingQuoteFound = null;
+
+        boolean isCitationCandidate = false;
+
+        StringBuilder completeNote = new StringBuilder();
+        String styleType = "note";
+
+        for (TextPosition candidate : positions) {
+            String c = candidate.getUnicode();
+            if (c == null || c.length() == 0)
+                continue;
+
+            if ((c.equals("»") || c.equals("\"") || c.equals("”"))) {
+                closingQuoteFound = candidate;
+            }
+
+            if (closingQuoteFound != null && c.equals("(")) {
+                float deltaX = Math.abs(candidate.getXDirAdj() - closingQuoteFound.getXDirAdj());
+                float deltaY = Math.abs(candidate.getYDirAdj() - closingQuoteFound.getYDirAdj());
+
+                if (deltaX < 10 && deltaY < 10) { // it's close
+                    completeNote.append(c);
+                    isCitationCandidate = true;
+                }
+            }
+
+            if (isCitationCandidate && !c.equals(")")) {
+                completeNote.append(c);
+            } else if (c.equals(")")) {
+                completeNote.append(c);
+
+                if (completeNote.length() > 3) { 
+                    float xStart = candidate.getXDirAdj();
+                    float yStart = candidate.getYDirAdj();
+                    NoteCandidate noteCandidate = new NoteCandidate(completeNote.toString(), page, xStart, yStart,
+                            styleType);
+                    noteCandidates.add(noteCandidate);
+                }
+
+                completeNote.setLength(0);
+                isCitationCandidate = false;
+            }
+
+        }
         return noteCandidates;
     }
 }

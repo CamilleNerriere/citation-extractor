@@ -5,12 +5,14 @@ public class NoteCandidate {
     private final int page;
     private final float x;
     private final float y;
+    private final String styleType;
 
-    public NoteCandidate(final String text, final int page, final float x, final float y) {
+    public NoteCandidate(final String text, final int page, final float x, final float y, final String styleType) {
         this.text = text;
         this.page = page;
         this.x = x;
         this.y = y;
+        this.styleType = styleType;
     }
 
     public String getText() {
@@ -29,12 +31,17 @@ public class NoteCandidate {
         return y;
     }
 
+    public String getStyleType(){
+        return styleType;
+    }
+
     @Override
     public String toString() {
         return "NoteCandidate{" +
                 "text='" + text + '\'' +
                 ", x=" + x +
                 ", y=" + y +
+                ", styleType=" + styleType +
                 '}';
     }
 }
