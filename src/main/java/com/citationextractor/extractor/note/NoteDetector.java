@@ -21,8 +21,6 @@ public class NoteDetector implements INoteDetector {
         noteCandidates.addAll(harvardCandidates);
         noteCandidates.addAll(tradCandidates);
 
-        System.out.println(noteCandidates);
-
         return noteCandidates;
     }
 

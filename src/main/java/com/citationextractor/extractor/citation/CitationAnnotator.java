@@ -46,3 +46,5 @@ public class CitationAnnotator implements ICitationAnnotator{
         return sortedCitations;
     }
 }
+
+// TODO : adapter les conditions en fonction du type de note parce que spatialisation différente

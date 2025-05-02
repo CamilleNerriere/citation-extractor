@@ -74,7 +74,7 @@ public class Extractor {
                     notesCandidatesPerPage, context));
         }
 
-        // System.out.println(foundCitations);
+        System.out.println(foundCitations);
         return citationsCandidatesPerPage;
     }
 
