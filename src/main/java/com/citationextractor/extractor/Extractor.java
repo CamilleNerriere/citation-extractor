@@ -38,22 +38,21 @@ public class Extractor {
 
             stripper.clearPositions();
             stripper.getText(document);
+
+            // first : we get everything that's between quotation marks
             List<TextPosition> positions = stripper.getTextPositions();
             CitationExtractionResult result = extractCitationsPerPage(positions, troncatedCitationFromLastPage, page);
             citationsCandidatesPerPage.put(page, result.citations());
             troncatedCitationFromLastPage = result.troncatedCitation();
 
+            // second : we get all small number that can be a note calls
             notesCandidatesPerPage.put(page, getNoteCandidates(positions, page));
 
+            // third : we match to eleminate text between quotation marks that is note
+            // citation
             foundCitations.put(page, getAnnotatedCitations(citationsCandidatesPerPage,
                     notesCandidatesPerPage, page));
         }
-
-        Citation citationOnMultiplePage = citationsCandidatesPerPage.get(8).get(0);
-        // System.out.println("X end :" + citationOnMultiplePage.getXEnd());
-        // System.out.println("Y end :" + citationOnMultiplePage.getYEnd());
-
-        // System.out.println(notesCandidatesPerPage.get(8).get(0));
 
         System.out.println(foundCitations);
         return citationsCandidatesPerPage;
@@ -121,12 +120,15 @@ public class Extractor {
                 }
             }
         }
-        
+
         return new CitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
     }
 
     private OneCitationResult extractOneCitation(List<TextPosition> positions, String openingQuote,
             String remainingTextFromLastPage, int page, int start) {
+
+        Float avgFontSize = getAverageFontSize(positions);
+        Float medianeFontSize = getMedianeSize(positions);
 
         String c1 = openingQuote;
         StringBuilder citationContent = new StringBuilder(remainingTextFromLastPage);
@@ -146,9 +148,15 @@ public class Extractor {
 
         for (int j = start; j < positions.size(); j++) {
 
-            String currentChar = positions.get(j).getUnicode();
+            TextPosition currentCharAsPosition = positions.get(j);
+            String currentChar = currentCharAsPosition.getUnicode();
 
             if (!currentChar.equals(c2)) {
+
+                if (currentCharAsPosition.getFontSizeInPt() < medianeFontSize * 0.95) {
+                    continue;
+                }
+
                 if (!currentChar.equals(c1)) {
                     citationContent.append(positions.get(j).getUnicode());
                 }
@@ -259,6 +267,26 @@ public class Extractor {
         }
 
         return averageSize;
+    }
+
+    private float getMedianeSize(List<TextPosition> positions) {
+        List<Float> sizes = positions.stream()
+                .map(pos -> pos.getFontSizeInPt())
+                .filter(size -> size > 4 && size < 25) 
+                .sorted()
+                .toList();
+        
+                int listSize = sizes.size();
+                float median = 0;
+
+                if(listSize%2 !=0){
+                    median = sizes.get(listSize/2);
+                } else {
+                    median = (sizes.get(listSize/2 - 1) + sizes.get(listSize/2)) / 2;
+                }
+
+                return median;
+
     }
 
     private List<AnnotatedCitation> getAnnotatedCitations(
