@@ -1,4 +1,4 @@
-package com.citationextractor.model;
+package com.citationextractor.model.citation;
 
 public class AnnotatedHarvardCitation {
     private final Citation baseCitation;

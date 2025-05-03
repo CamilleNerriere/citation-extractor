@@ -1,4 +1,4 @@
-package com.citationextractor.extractor.citation;
+package com.citationextractor.extractor.citation.harvard;
 
 import java.util.ArrayList;
 import java.util.List;

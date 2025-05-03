@@ -1,4 +1,4 @@
-package com.citationextractor.extractor.citation;
+package com.citationextractor.extractor.citation.harvard;
 
 import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.AnnotatedHarvardCitation;

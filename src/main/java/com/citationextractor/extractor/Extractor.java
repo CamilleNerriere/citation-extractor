@@ -7,9 +7,9 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.TextPosition;
 
-import com.citationextractor.extractor.citation.IHarvardCitationExtractor;
-import com.citationextractor.extractor.citation.ITradCitationAnnotator;
-import com.citationextractor.extractor.citation.ITradCitationExtractor;
+import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
+import com.citationextractor.extractor.citation.trad.ITradCitationAnnotator;
+import com.citationextractor.extractor.citation.trad.ITradCitationExtractor;
 import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.model.AnnotatedHarvardCitation;

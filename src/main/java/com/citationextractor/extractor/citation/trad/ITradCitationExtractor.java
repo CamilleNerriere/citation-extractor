@@ -1,4 +1,4 @@
-package com.citationextractor.extractor.citation;
+package com.citationextractor.extractor.citation.trad;
 
 import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.OneTradCitationResult;
