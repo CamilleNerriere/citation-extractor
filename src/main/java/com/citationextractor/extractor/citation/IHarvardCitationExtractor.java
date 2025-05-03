@@ -4,6 +4,7 @@ import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.AnnotatedHarvardCitation;
 import com.citationextractor.model.Citation;
 import com.citationextractor.model.HarvardCitationExtractionResult;
+import com.citationextractor.model.HarvardExtractionResult;
 import com.citationextractor.model.OnePotentialCitationResult;
 import com.citationextractor.model.TroncatedCitation;
 
@@ -19,5 +20,6 @@ public interface IHarvardCitationExtractor {
 
         AnnotatedHarvardCitation extractOneHarvardCitation(ExtractionContext context, Citation citation,
                         int start);
-                        
+
+        HarvardExtractionResult getExtractionResult(ExtractionContext context, OnePotentialCitationResult citationResult);
 }

@@ -9,6 +9,7 @@ import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.AnnotatedHarvardCitation;
 import com.citationextractor.model.Citation;
 import com.citationextractor.model.HarvardCitationExtractionResult;
+import com.citationextractor.model.HarvardExtractionResult;
 import com.citationextractor.model.OnePotentialCitationResult;
 import com.citationextractor.model.TroncatedCitation;
 
@@ -55,17 +56,14 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
             OnePotentialCitationResult citationResult = extractOneCitation(context,
                     truncOpeningQuote,
                     truncContent, 0);
+                    
+                    HarvardExtractionResult result = getExtractionResult(context, citationResult);
 
-            if (!citationResult.citationIsEmpty()) {
-                AnnotatedHarvardCitation harvardCitation = extractOneHarvardCitation(context, citationResult.citation(),
-                        citationResult.lastIndex());
-                if(harvardCitation != null) citations.add(harvardCitation);
-                // on lance le traitement pour récupérer la note
-                truncContent = "";
-            } else {
-                truncContent = citationResult.trunc().content();
-                truncOpeningQuote = citationResult.trunc().openingQuote();
-            }
+                    if(result.citation() !=null){
+                        citations.add(result.citation());
+                    }
+                    truncContent = result.truncContent();
+                    truncOpeningQuote = result.truncOpeningQuote();
 
         }
 
@@ -74,16 +72,13 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
         for (int i = 0; i < positions.size(); i++) {
             if (positions.get(i).getUnicode().equals(openingQuote)) {
                 OnePotentialCitationResult citationResult = extractOneCitation(context, openingQuote, "", i);
-                if (!citationResult.citationIsEmpty()) {
-                    truncContent = "";
-                    AnnotatedHarvardCitation harvardCitation = extractOneHarvardCitation(context,
-                            citationResult.citation(), citationResult.lastIndex());
-                    if(harvardCitation != null) citations.add(harvardCitation);
-                    // et on lance le traitement
-                } else {
-                    truncContent = citationResult.trunc().content();
-                    truncOpeningQuote = citationResult.trunc().openingQuote();
-                }
+                HarvardExtractionResult result = getExtractionResult(context, citationResult);
+
+                    if(result.citation() !=null){
+                        citations.add(result.citation());
+                    }
+                    truncContent = result.truncContent();
+                    truncOpeningQuote = result.truncOpeningQuote();
             }
         }
 
@@ -118,12 +113,13 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
 
             TextPosition currentCharAsPosition = positions.get(j);
             String currentChar = currentCharAsPosition.getUnicode();
-            
-            /*To avoid getting page note content in case of truncated citation */
+
+            /* To avoid getting page note content in case of truncated citation */
             boolean isTruncationContext = remainingTextFromLastPage.length() > 0;
             boolean isSmallFont = currentCharAsPosition.getFontSizeInPt() < medianFontSize * 0.95;
-            
-            if (isTruncationContext && isSmallFont) continue;
+
+            if (isTruncationContext && isSmallFont)
+                continue;
 
             if (currentChar.equals(c2)) {
                 citationContent.append(c2);
@@ -132,7 +128,6 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
                 lastCharIndex = j;
                 break;
             }
-
 
             citationContent.append(currentChar);
 
@@ -162,7 +157,7 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
             String c = positions.get(j).getUnicode();
 
             if (!foundHavardNote) {
-                if (c.equals("(") && j <= start+5) {
+                if (c.equals("(") && j <= start + 5) {
                     harvardNote.append(c);
                     foundHavardNote = true;
                 }
@@ -181,11 +176,28 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
         }
         return null;
     }
+
+    @Override
+    public HarvardExtractionResult getExtractionResult(ExtractionContext context, OnePotentialCitationResult citationResult) {
+        String truncContent = citationResult.trunc().content();
+        String truncOpeningQuote = citationResult.trunc().openingQuote();
+        if (!citationResult.citationIsEmpty()) {
+            AnnotatedHarvardCitation harvardCitation = extractOneHarvardCitation(context, citationResult.citation(),
+                    citationResult.lastIndex());
+            truncContent = "";
+            return new HarvardExtractionResult(harvardCitation, truncContent, truncOpeningQuote);
+        }
+
+        return new HarvardExtractionResult(null, truncContent, truncOpeningQuote);
+
+    }
+
     private boolean isValidHarvardNote(String note) {
-        if (note == null || note.length() < 3) return false;
+        if (note == null || note.length() < 3)
+            return false;
         boolean hasDigit = note.matches(".*\\d+.*");
         boolean hasUpper = note.matches(".*[A-ZÉÈÊÂÀÙÎÔÇ].*"); // majuscules françaises aussi
         return (hasDigit || hasUpper);
     }
-    
+
 }
