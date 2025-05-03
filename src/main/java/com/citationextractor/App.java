@@ -16,7 +16,7 @@ import com.citationextractor.extractor.citation.trad.TradCitationAnnotator;
 import com.citationextractor.extractor.citation.trad.TradCitationExtractor;
 import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.extractor.note.NoteDetector;
-import com.citationextractor.model.Citation;
+import com.citationextractor.model.citation.Citation;
 import com.citationextractor.utils.FontStats;
 import com.citationextractor.utils.IFontStats;
 

@@ -6,12 +6,12 @@ import java.util.List;
 import org.apache.pdfbox.text.TextPosition;
 
 import com.citationextractor.extractor.context.ExtractionContext;
-import com.citationextractor.model.AnnotatedHarvardCitation;
-import com.citationextractor.model.Citation;
-import com.citationextractor.model.HarvardCitationExtractionResult;
-import com.citationextractor.model.HarvardExtractionResult;
-import com.citationextractor.model.OnePotentialCitationResult;
-import com.citationextractor.model.TroncatedCitation;
+import com.citationextractor.model.citation.AnnotatedHarvardCitation;
+import com.citationextractor.model.citation.Citation;
+import com.citationextractor.model.citation.TroncatedCitation;
+import com.citationextractor.model.result.HarvardCitationExtractionResult;
+import com.citationextractor.model.result.HarvardExtractionResult;
+import com.citationextractor.model.result.OnePotentialCitationResult;
 
 public class HarvardCitationExtractor implements IHarvardCitationExtractor {
 

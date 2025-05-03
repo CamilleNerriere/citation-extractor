@@ -6,10 +6,10 @@ import java.util.List;
 import org.apache.pdfbox.text.TextPosition;
 
 import com.citationextractor.extractor.context.ExtractionContext;
-import com.citationextractor.model.Citation;
-import com.citationextractor.model.OneTradCitationResult;
-import com.citationextractor.model.TradCitationExtractionResult;
-import com.citationextractor.model.TroncatedCitation;
+import com.citationextractor.model.citation.Citation;
+import com.citationextractor.model.citation.TroncatedCitation;
+import com.citationextractor.model.result.OneTradCitationResult;
+import com.citationextractor.model.result.TradCitationExtractionResult;
 
 public class TradCitationExtractor implements ITradCitationExtractor {
     

@@ -8,7 +8,7 @@ import java.util.Set;
 import org.apache.pdfbox.text.TextPosition;
 
 import com.citationextractor.extractor.context.ExtractionContext;
-import com.citationextractor.model.NoteCandidate;
+import com.citationextractor.model.citation.NoteCandidate;
 
 public class NoteDetector implements INoteDetector {
 

@@ -1,4 +1,4 @@
-package com.citationextractor.model;
+package com.citationextractor.model.citation;
 
 public class NoteCandidate {
     private final String text;

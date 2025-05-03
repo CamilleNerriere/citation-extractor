@@ -1,5 +1,4 @@
-package com.citationextractor.model;
-
+package com.citationextractor.model.citation;
 
 public class AnnotatedTradCitation {
     private final Citation baseCitation;

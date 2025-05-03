@@ -1,5 +1,5 @@
 
-package com.citationextractor.model;
+package com.citationextractor.model.citation;
 
 import org.apache.pdfbox.text.TextPosition;
 
