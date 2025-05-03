@@ -5,19 +5,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.citationextractor.extractor.context.ExtractionContext;
-import com.citationextractor.model.AnnotatedCitation;
+import com.citationextractor.model.AnnotatedTradCitation;
 import com.citationextractor.model.Citation;
 import com.citationextractor.model.NoteCandidate;
 
 
-public class CitationAnnotator implements ICitationAnnotator{
+public class TradCitationAnnotator implements ITradCitationAnnotator{
 
     @Override
-    public List<AnnotatedCitation> getAnnotatedCitations(
+    public List<AnnotatedTradCitation> getAnnotatedCitations(
             LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage,
             LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage, ExtractionContext context) {
 
-        List<AnnotatedCitation> sortedCitations = new ArrayList<>();
+        List<AnnotatedTradCitation> sortedCitations = new ArrayList<>();
         int page = context.getPage();
 
         List<Citation> citations = citationsCandidatesPerPage.get(page);
@@ -37,7 +37,7 @@ public class CitationAnnotator implements ICitationAnnotator{
                 float dy = Math.abs(yNote - yCitation);
 
                 if (dx >= -1 && dx < 20 && dy < 25) {
-                    AnnotatedCitation annotatedCitation = new AnnotatedCitation(citation, note.getText());
+                    AnnotatedTradCitation annotatedCitation = new AnnotatedTradCitation(citation, note.getText());
                     sortedCitations.add(annotatedCitation);
                 }
             }

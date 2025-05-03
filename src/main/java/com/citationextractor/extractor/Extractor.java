@@ -7,14 +7,17 @@ import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.TextPosition;
 
-import com.citationextractor.extractor.citation.ICitationAnnotator;
-import com.citationextractor.extractor.citation.ICitationExtractor;
+import com.citationextractor.extractor.citation.IHarvardCitationExtractor;
+import com.citationextractor.extractor.citation.ITradCitationAnnotator;
+import com.citationextractor.extractor.citation.ITradCitationExtractor;
 import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.extractor.note.INoteDetector;
-import com.citationextractor.model.AnnotatedCitation;
+import com.citationextractor.model.AnnotatedHarvardCitation;
+import com.citationextractor.model.AnnotatedTradCitation;
 import com.citationextractor.model.Citation;
-import com.citationextractor.model.CitationExtractionResult;
+import com.citationextractor.model.HarvardCitationExtractionResult;
 import com.citationextractor.model.NoteCandidate;
+import com.citationextractor.model.TradCitationExtractionResult;
 import com.citationextractor.model.TroncatedCitation;
 import com.citationextractor.pdf.CustomTextStripper;
 import com.citationextractor.utils.IFontStats;
@@ -24,14 +27,16 @@ public class Extractor {
 
     private final IFontStats fontStats;
     private final INoteDetector noteDetector;
-    private final ICitationExtractor citationExtractor;
-    private final ICitationAnnotator citationAnnotator;
+    private final ITradCitationExtractor citationExtractor;
+    private final ITradCitationAnnotator citationAnnotator;
+    private final IHarvardCitationExtractor harvardExtractor;
 
-    public Extractor(final IFontStats fontStats, final INoteDetector noteDetector, final ICitationExtractor citationExtractor, final ICitationAnnotator citationAnnotator){
+    public Extractor(final IFontStats fontStats, final INoteDetector noteDetector, final ITradCitationExtractor citationExtractor, final ITradCitationAnnotator citationAnnotator, final IHarvardCitationExtractor harvardExtractor){
         this.fontStats = fontStats;
         this.noteDetector = noteDetector;
         this.citationExtractor = citationExtractor;
         this.citationAnnotator = citationAnnotator;
+        this.harvardExtractor = harvardExtractor;
     }
 
     public LinkedHashMap<Integer, List<Citation>> extractAll(PDDocument document) throws IOException {
@@ -41,8 +46,10 @@ public class Extractor {
         int pageCount = document.getNumberOfPages();
 
         LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = new LinkedHashMap<>();
+
         LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage = new LinkedHashMap<>();
-        LinkedHashMap<Integer, List<AnnotatedCitation>> foundCitations = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<AnnotatedTradCitation>> foundCitations = new LinkedHashMap<>();
 
         TroncatedCitation troncatedCitationFromLastPage = new TroncatedCitation(null, null);
 
@@ -59,9 +66,10 @@ public class Extractor {
             float medianFontSize = fontStats.getMedianSize(positions);
             ExtractionContext context = new ExtractionContext(positions, page, avgFontSize, medianFontSize);
 
+            /** Trad Citations Treatement */
             // first : we get everything that's between quotation marks
 
-            CitationExtractionResult result = citationExtractor.extractCitationsPerPage(context, troncatedCitationFromLastPage);
+            TradCitationExtractionResult result = citationExtractor.extractCitationsPerPage(context, troncatedCitationFromLastPage);
             citationsCandidatesPerPage.put(page, result.citations());
             troncatedCitationFromLastPage = result.troncatedCitation();
 
@@ -72,9 +80,16 @@ public class Extractor {
             // citation
             foundCitations.put(page, citationAnnotator.getAnnotatedCitations(citationsCandidatesPerPage,
                     notesCandidatesPerPage, context));
+
+            /** Harvard Citations Treatement */
+
+            HarvardCitationExtractionResult harvardCitationsResult = harvardExtractor.extractCitationsPerPage(context, troncatedCitationFromLastPage);
+            harvardCitations.put(page, harvardCitationsResult.harvardCitations());
+            troncatedCitationFromLastPage = harvardCitationsResult.troncatedCitation();
         }
 
-        System.out.println(foundCitations);
+        System.out.println(harvardCitations);
+
         return citationsCandidatesPerPage;
     }
 

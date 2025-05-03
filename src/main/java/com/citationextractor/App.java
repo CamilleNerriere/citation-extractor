@@ -8,10 +8,12 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import com.citationextractor.extractor.Extractor;
-import com.citationextractor.extractor.citation.CitationAnnotator;
-import com.citationextractor.extractor.citation.CitationExtractor;
-import com.citationextractor.extractor.citation.ICitationAnnotator;
-import com.citationextractor.extractor.citation.ICitationExtractor;
+import com.citationextractor.extractor.citation.HarvardCitationExtractor;
+import com.citationextractor.extractor.citation.IHarvardCitationExtractor;
+import com.citationextractor.extractor.citation.ITradCitationAnnotator;
+import com.citationextractor.extractor.citation.ITradCitationExtractor;
+import com.citationextractor.extractor.citation.TradCitationAnnotator;
+import com.citationextractor.extractor.citation.TradCitationExtractor;
 import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.extractor.note.NoteDetector;
 import com.citationextractor.model.Citation;
@@ -27,9 +29,10 @@ public class App {
             
             IFontStats fontStats = new FontStats();
             INoteDetector noteDetector = new NoteDetector();
-            ICitationExtractor citationExtractor = new CitationExtractor();
-            ICitationAnnotator citationAnnotator = new CitationAnnotator();
-            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator);
+            ITradCitationExtractor citationExtractor = new TradCitationExtractor();
+            ITradCitationAnnotator citationAnnotator = new TradCitationAnnotator();
+            IHarvardCitationExtractor harvardExtractor = new HarvardCitationExtractor();
+            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator, harvardExtractor);
 
             LinkedHashMap<Integer, List<Citation>> citationsPerPage = extractor.extractAll(document);
 
@@ -39,6 +42,7 @@ public class App {
             
         } catch (Exception e) {
             System.out.println(e);
+            e.printStackTrace();
         }
 
     }

@@ -3,6 +3,7 @@ package com.citationextractor.extractor.note;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.pdfbox.text.TextPosition;
 
@@ -10,6 +11,8 @@ import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.NoteCandidate;
 
 public class NoteDetector implements INoteDetector {
+
+    private static final Set<String> CLOSING_QUOTES = Set.of("»", "\"", "”");
 
     @Override
     public List<NoteCandidate> getNoteCandidates(ExtractionContext context) {
@@ -108,7 +111,7 @@ public class NoteDetector implements INoteDetector {
             if (c == null || c.length() == 0)
                 continue;
 
-            if ((c.equals("»") || c.equals("\"") || c.equals("”"))) {
+            if (CLOSING_QUOTES.contains(c)) {
                 closingQuoteFound = candidate;
             }
 

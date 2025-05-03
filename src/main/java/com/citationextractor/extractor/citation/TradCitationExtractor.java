@@ -7,14 +7,14 @@ import org.apache.pdfbox.text.TextPosition;
 
 import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.Citation;
-import com.citationextractor.model.CitationExtractionResult;
-import com.citationextractor.model.OneCitationResult;
+import com.citationextractor.model.OneTradCitationResult;
+import com.citationextractor.model.TradCitationExtractionResult;
 import com.citationextractor.model.TroncatedCitation;
 
-public class CitationExtractor implements ICitationExtractor {
+public class TradCitationExtractor implements ITradCitationExtractor {
     
     @Override
-    public CitationExtractionResult extractCitationsPerPage(ExtractionContext context,
+    public TradCitationExtractionResult extractCitationsPerPage(ExtractionContext context,
             TroncatedCitation troncatedCitationFromLastPage) {
 
         List<Citation> allCitations = new ArrayList<>();
@@ -27,7 +27,7 @@ public class CitationExtractor implements ICitationExtractor {
                     ? updatedTroncated.content()
                     : null;
             TroncatedCitation troncatedToPass = new TroncatedCitation(content, opening);
-            CitationExtractionResult result = extractCitations(context, opening, troncatedToPass);
+            TradCitationExtractionResult result = extractCitations(context, opening, troncatedToPass);
             allCitations.addAll(result.citations());
 
             if (result.troncatedCitation().isEmpty() == false) {
@@ -38,11 +38,11 @@ public class CitationExtractor implements ICitationExtractor {
             }
         }
 
-        return new CitationExtractionResult(allCitations, updatedTroncated);
+        return new TradCitationExtractionResult(allCitations, updatedTroncated);
     }
 
     @Override
-    public CitationExtractionResult extractCitations(ExtractionContext context, String openingQuote,
+    public TradCitationExtractionResult extractCitations(ExtractionContext context, String openingQuote,
             TroncatedCitation troncatedCitationFromLastPage) {
 
         List<Citation> citations = new ArrayList<>();
@@ -51,7 +51,7 @@ public class CitationExtractor implements ICitationExtractor {
         String truncOpeningQuote = troncatedCitationFromLastPage.openingQuote();
 
         if (!troncatedCitationFromLastPage.isEmpty()) {
-            OneCitationResult citationResult = extractOneCitation(context,
+            OneTradCitationResult citationResult = extractOneCitation(context,
                     truncOpeningQuote,
                     truncContent, 0);
 
@@ -69,7 +69,7 @@ public class CitationExtractor implements ICitationExtractor {
 
         for (int i = 0; i < positions.size(); i++) {
             if (positions.get(i).getUnicode().equals(openingQuote)) {
-                OneCitationResult citationResult = extractOneCitation(context, openingQuote, "", i);
+                OneTradCitationResult citationResult = extractOneCitation(context, openingQuote, "", i);
                 if (citationResult.citation() != null) {
                     citations.add(citationResult.citation());
                     truncContent = "";
@@ -80,11 +80,11 @@ public class CitationExtractor implements ICitationExtractor {
             }
         }
 
-        return new CitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
+        return new TradCitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
     }
 
     @Override
-    public OneCitationResult extractOneCitation(ExtractionContext context, String openingQuote,
+    public OneTradCitationResult extractOneCitation(ExtractionContext context, String openingQuote,
             String remainingTextFromLastPage, int start) {
 
 
@@ -133,10 +133,10 @@ public class CitationExtractor implements ICitationExtractor {
             Citation citation = new Citation(citationContent.toString().trim(), context.getPage(),
                     firstChar, lastChar, c1);
             TroncatedCitation trunc = new TroncatedCitation(null, null);
-            return new OneCitationResult(citation, trunc);
+            return new OneTradCitationResult(citation, trunc);
         }
 
-        return new OneCitationResult(null, new TroncatedCitation(citationContent.toString(), openingQuote));
+        return new OneTradCitationResult(null, new TroncatedCitation(citationContent.toString(), openingQuote));
 
     }
 }

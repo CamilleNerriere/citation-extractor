@@ -1,13 +1,12 @@
 package com.citationextractor.model;
 
-
-public class AnnotatedCitation {
+public class AnnotatedHarvardCitation {
     private final Citation baseCitation;
-    private final String noteNumberAString;
+    private final String noteContent;
 
-    public AnnotatedCitation(final Citation baseCitation, final String noteNumberAString){
+    public AnnotatedHarvardCitation(final Citation baseCitation, final String noteContent){
         this.baseCitation = baseCitation;
-        this.noteNumberAString = noteNumberAString;
+        this.noteContent = noteContent;
     }
 
     public Citation getBaseCitation(){
@@ -15,7 +14,7 @@ public class AnnotatedCitation {
     }
 
     public String getNoteNumberAString(){
-        return noteNumberAString;
+        return noteContent;
     }
 
     @Override
@@ -25,7 +24,7 @@ public class AnnotatedCitation {
                 ", page=" + baseCitation.getPage() +
                 ", endX=" + baseCitation.getXEnd() +
                 ", endY=" + baseCitation.getYEnd() +
-                ", note=" + noteNumberAString + 
+                ", note=" + noteContent + 
                 '}';
     }
 }
