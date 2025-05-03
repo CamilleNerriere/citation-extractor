@@ -3,6 +3,8 @@ package com.citationextractor.extractor;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.TextPosition;
@@ -17,11 +19,11 @@ import com.citationextractor.model.citation.AnnotatedTradCitation;
 import com.citationextractor.model.citation.Citation;
 import com.citationextractor.model.citation.NoteCandidate;
 import com.citationextractor.model.citation.TroncatedCitation;
+import com.citationextractor.model.result.AllTypeCitationsResult;
 import com.citationextractor.model.result.HarvardCitationExtractionResult;
 import com.citationextractor.model.result.TradCitationExtractionResult;
 import com.citationextractor.pdf.CustomTextStripper;
 import com.citationextractor.utils.IFontStats;
-
 
 public class Extractor {
 
@@ -31,7 +33,9 @@ public class Extractor {
     private final ITradCitationAnnotator citationAnnotator;
     private final IHarvardCitationExtractor harvardExtractor;
 
-    public Extractor(final IFontStats fontStats, final INoteDetector noteDetector, final ITradCitationExtractor citationExtractor, final ITradCitationAnnotator citationAnnotator, final IHarvardCitationExtractor harvardExtractor){
+    public Extractor(final IFontStats fontStats, final INoteDetector noteDetector,
+            final ITradCitationExtractor citationExtractor, final ITradCitationAnnotator citationAnnotator,
+            final IHarvardCitationExtractor harvardExtractor) {
         this.fontStats = fontStats;
         this.noteDetector = noteDetector;
         this.citationExtractor = citationExtractor;
@@ -39,15 +43,45 @@ public class Extractor {
         this.harvardExtractor = harvardExtractor;
     }
 
-    public LinkedHashMap<Integer, List<Citation>> extractAll(PDDocument document) throws IOException {
+    public AllTypeCitationsResult extractAll(PDDocument document) throws IOException {
 
+
+        CompletableFuture<LinkedHashMap<Integer, List<AnnotatedTradCitation>>> tradFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return extractTradCitations(document);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        CompletableFuture<LinkedHashMap<Integer, List<AnnotatedHarvardCitation>>>  harvardFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return extractHarvardCitations(document);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        try {
+            LinkedHashMap<Integer, List<AnnotatedTradCitation>> tradCitations = tradFuture.get();
+            LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = harvardFuture.get();
+            System.out.println(tradCitations);
+            System.out.println(harvardCitations);
+            return new AllTypeCitationsResult(harvardCitations, tradCitations);
+
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IOException("Error during parallel extraction", e);
+        }
+
+    }
+
+    private LinkedHashMap<Integer, List<AnnotatedTradCitation>> extractTradCitations(PDDocument document)
+            throws IOException {
         CustomTextStripper stripper = new CustomTextStripper();
 
         int pageCount = document.getNumberOfPages();
 
         LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage = new LinkedHashMap<>();
-        LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = new LinkedHashMap<>();
-
         LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<AnnotatedTradCitation>> foundCitations = new LinkedHashMap<>();
 
@@ -60,16 +94,17 @@ public class Extractor {
             stripper.clearPositions();
             stripper.getText(document);
 
-            // set extraction context 
+            // set extraction context
             List<TextPosition> positions = stripper.getTextPositions();
+            
             float avgFontSize = fontStats.getAverageFontSize(positions);
             float medianFontSize = fontStats.getMedianSize(positions);
             ExtractionContext context = new ExtractionContext(positions, page, avgFontSize, medianFontSize);
 
-            /** Trad Citations Treatement */
             // first : we get everything that's between quotation marks
 
-            TradCitationExtractionResult result = citationExtractor.extractCitationsPerPage(context, troncatedCitationFromLastPage);
+            TradCitationExtractionResult result = citationExtractor.extractCitationsPerPage(context,
+                    troncatedCitationFromLastPage);
             citationsCandidatesPerPage.put(page, result.citations());
             troncatedCitationFromLastPage = result.troncatedCitation();
 
@@ -81,16 +116,40 @@ public class Extractor {
             foundCitations.put(page, citationAnnotator.getAnnotatedCitations(citationsCandidatesPerPage,
                     notesCandidatesPerPage, context));
 
-            /** Harvard Citations Treatement */
+        }
+        return foundCitations;
+    }
 
-            HarvardCitationExtractionResult harvardCitationsResult = harvardExtractor.extractCitationsPerPage(context, troncatedCitationFromLastPage);
+    private LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> extractHarvardCitations(PDDocument document)
+            throws IOException {
+        CustomTextStripper stripper = new CustomTextStripper();
+
+        int pageCount = document.getNumberOfPages();
+
+        LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = new LinkedHashMap<>();
+
+        TroncatedCitation troncatedCitationFromLastPage = new TroncatedCitation(null, null);
+
+        for (int page = 1; page <= pageCount; page++) {
+            stripper.setStartPage(page);
+            stripper.setEndPage(page);
+
+            stripper.clearPositions();
+            stripper.getText(document);
+
+            // set extraction context
+            List<TextPosition> positions = stripper.getTextPositions();
+            float avgFontSize = fontStats.getAverageFontSize(positions);
+            float medianFontSize = fontStats.getMedianSize(positions);
+            ExtractionContext context = new ExtractionContext(positions, page, avgFontSize, medianFontSize);
+
+            HarvardCitationExtractionResult harvardCitationsResult = harvardExtractor.extractCitationsPerPage(context,
+                    troncatedCitationFromLastPage);
             harvardCitations.put(page, harvardCitationsResult.harvardCitations());
             troncatedCitationFromLastPage = harvardCitationsResult.troncatedCitation();
         }
 
-        System.out.println(harvardCitations);
-
-        return citationsCandidatesPerPage;
+        return harvardCitations;
     }
 
 }

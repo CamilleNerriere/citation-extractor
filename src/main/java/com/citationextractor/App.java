@@ -1,8 +1,6 @@
 package com.citationextractor;
 
 import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -16,7 +14,7 @@ import com.citationextractor.extractor.citation.trad.TradCitationAnnotator;
 import com.citationextractor.extractor.citation.trad.TradCitationExtractor;
 import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.extractor.note.NoteDetector;
-import com.citationextractor.model.citation.Citation;
+import com.citationextractor.model.result.AllTypeCitationsResult;
 import com.citationextractor.utils.FontStats;
 import com.citationextractor.utils.IFontStats;
 
@@ -34,7 +32,7 @@ public class App {
             IHarvardCitationExtractor harvardExtractor = new HarvardCitationExtractor();
             Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator, harvardExtractor);
 
-            LinkedHashMap<Integer, List<Citation>> citationsPerPage = extractor.extractAll(document);
+            AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
             // for (int i : citationsPerPage.keySet()) {
             //     System.out.println("Page " + i + " : " + citationsPerPage.get(i));

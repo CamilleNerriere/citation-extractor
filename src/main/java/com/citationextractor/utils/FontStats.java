@@ -41,6 +41,10 @@ public class FontStats implements IFontStats{
 
     @Override
     public float getMedianSize(List<TextPosition> positions) {
+        if (positions.isEmpty()) {
+            return 0;
+        }
+        
         List<Float> sizes = positions.stream()
         .map(pos -> pos.getFontSizeInPt())
         .filter(size -> size > 4 && size < 25) 
