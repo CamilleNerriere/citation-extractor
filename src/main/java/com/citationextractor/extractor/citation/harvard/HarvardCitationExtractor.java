@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.apache.pdfbox.text.TextPosition;
 
-import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
 import com.citationextractor.model.citation.Citation;
 import com.citationextractor.model.citation.TroncatedCitation;
+import com.citationextractor.model.context.ExtractionContext;
 import com.citationextractor.model.result.HarvardCitationExtractionResult;
 import com.citationextractor.model.result.HarvardExtractionResult;
 import com.citationextractor.model.result.OnePotentialCitationResult;

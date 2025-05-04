@@ -8,6 +8,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import com.citationextractor.extractor.Extractor;
 import com.citationextractor.extractor.citation.harvard.HarvardCitationExtractor;
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
+import com.citationextractor.extractor.citation.trad.FootnoteExtractor;
+import com.citationextractor.extractor.citation.trad.IFootnoteExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationAnnotator;
 import com.citationextractor.extractor.citation.trad.ITradCitationExtractor;
 import com.citationextractor.extractor.citation.trad.TradCitationAnnotator;
@@ -30,7 +32,9 @@ public class App {
             ITradCitationExtractor citationExtractor = new TradCitationExtractor();
             ITradCitationAnnotator citationAnnotator = new TradCitationAnnotator();
             IHarvardCitationExtractor harvardExtractor = new HarvardCitationExtractor();
-            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator, harvardExtractor);
+            IFootnoteExtractor footnoteExtractor = new FootnoteExtractor();
+
+            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator, harvardExtractor, footnoteExtractor);
 
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 

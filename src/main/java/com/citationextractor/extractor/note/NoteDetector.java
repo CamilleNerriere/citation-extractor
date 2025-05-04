@@ -7,8 +7,8 @@ import java.util.Set;
 
 import org.apache.pdfbox.text.TextPosition;
 
-import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.model.citation.NoteCandidate;
+import com.citationextractor.model.context.ExtractionContext;
 
 public class NoteDetector implements INoteDetector {
 
@@ -18,11 +18,12 @@ public class NoteDetector implements INoteDetector {
     public List<NoteCandidate> getNoteCandidates(ExtractionContext context) {
 
         List<NoteCandidate> noteCandidates = new ArrayList<>();
-        List<NoteCandidate> harvardCandidates = getHarvardNoteCandidates(context);
         List<NoteCandidate> tradCandidates = getTradNoteCandidates(context);
-
-        noteCandidates.addAll(harvardCandidates);
         noteCandidates.addAll(tradCandidates);
+        
+        /** Right now , havards note are directly searched for with citation extraction, but in case in need to extract separatly them, there is this code */
+        // List<NoteCandidate> harvardCandidates = getHarvardNoteCandidates(context);
+        // noteCandidates.addAll(harvardCandidates);
 
         return noteCandidates;
     }

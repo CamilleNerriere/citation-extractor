@@ -1,4 +1,4 @@
-package com.citationextractor.extractor.context;
+package com.citationextractor.model.context;
 
 import java.util.List;
 

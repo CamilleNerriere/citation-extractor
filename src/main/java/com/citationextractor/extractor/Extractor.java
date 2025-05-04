@@ -10,15 +10,17 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.TextPosition;
 
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
+import com.citationextractor.extractor.citation.trad.IFootnoteExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationAnnotator;
 import com.citationextractor.extractor.citation.trad.ITradCitationExtractor;
-import com.citationextractor.extractor.context.ExtractionContext;
 import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
 import com.citationextractor.model.citation.AnnotatedTradCitation;
 import com.citationextractor.model.citation.Citation;
 import com.citationextractor.model.citation.NoteCandidate;
 import com.citationextractor.model.citation.TroncatedCitation;
+import com.citationextractor.model.context.ExtractionContext;
+import com.citationextractor.model.footnote.Footnote;
 import com.citationextractor.model.result.AllTypeCitationsResult;
 import com.citationextractor.model.result.HarvardCitationExtractionResult;
 import com.citationextractor.model.result.TradCitationExtractionResult;
@@ -32,15 +34,17 @@ public class Extractor {
     private final ITradCitationExtractor citationExtractor;
     private final ITradCitationAnnotator citationAnnotator;
     private final IHarvardCitationExtractor harvardExtractor;
+    private final IFootnoteExtractor footnoteExtractor;
 
     public Extractor(final IFontStats fontStats, final INoteDetector noteDetector,
             final ITradCitationExtractor citationExtractor, final ITradCitationAnnotator citationAnnotator,
-            final IHarvardCitationExtractor harvardExtractor) {
+            final IHarvardCitationExtractor harvardExtractor, final IFootnoteExtractor footnoteExtractor) {
         this.fontStats = fontStats;
         this.noteDetector = noteDetector;
         this.citationExtractor = citationExtractor;
         this.citationAnnotator = citationAnnotator;
         this.harvardExtractor = harvardExtractor;
+        this.footnoteExtractor = footnoteExtractor;
     }
 
     public AllTypeCitationsResult extractAll(PDDocument document) throws IOException {
@@ -65,8 +69,6 @@ public class Extractor {
         try {
             LinkedHashMap<Integer, List<AnnotatedTradCitation>> tradCitations = tradFuture.get();
             LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = harvardFuture.get();
-            System.out.println(tradCitations);
-            System.out.println(harvardCitations);
             return new AllTypeCitationsResult(harvardCitations, tradCitations);
 
         } catch (InterruptedException | ExecutionException e) {
@@ -84,6 +86,7 @@ public class Extractor {
         LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<AnnotatedTradCitation>> foundCitations = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<Footnote>> footnotesPerPage = new LinkedHashMap<>();
 
         TroncatedCitation troncatedCitationFromLastPage = new TroncatedCitation(null, null);
 
@@ -115,6 +118,11 @@ public class Extractor {
             // citation
             foundCitations.put(page, citationAnnotator.getAnnotatedCitations(citationsCandidatesPerPage,
                     notesCandidatesPerPage, context));
+
+            // forth : we associate with footnote content 
+            footnotesPerPage.put(page, footnoteExtractor.getFootnotes(context, notesCandidatesPerPage));
+
+            System.out.println(footnotesPerPage);
 
         }
         return foundCitations;
