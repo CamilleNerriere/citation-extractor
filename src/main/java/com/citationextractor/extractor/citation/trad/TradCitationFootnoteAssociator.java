@@ -22,6 +22,8 @@ public class TradCitationFootnoteAssociator implements ITradCitationFootnoteAsso
             List<AnnotatedTradCitation> citationsPerPage = citations.get(page);
             List<Footnote> footnotePerPage = footnotes.get(page);
 
+            if (footnotePerPage == null) continue;
+
             List<CitationWithNote> citationsPerPageWithFootnotes = new ArrayList<>();
 
             for (AnnotatedTradCitation citation : citationsPerPage) {
@@ -31,15 +33,12 @@ public class TradCitationFootnoteAssociator implements ITradCitationFootnoteAsso
                         .filter(f -> f.getNoteNumber().equals(noteNumber)).findAny().orElse(null);
 
                 if (footnote == null)
-                    break;
+                    continue;;
 
                 citationsPerPageWithFootnotes.add(new CitationWithNote(citation, footnote.getText()));
             }
             citationsWithNotes.addAll(citationsPerPageWithFootnotes);
         }
-
-
-        System.out.println(citationsWithNotes);
 
         return citationsWithNotes;
     }
