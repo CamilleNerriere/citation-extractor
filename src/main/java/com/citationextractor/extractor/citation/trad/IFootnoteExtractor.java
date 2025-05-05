@@ -10,6 +10,6 @@ import com.citationextractor.model.footnote.Footnote;
 public interface IFootnoteExtractor {
 
     List<Footnote> getFootnotes(
-            ExtractionContext context,
+         ExtractionContext context,
             LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage);
 }
