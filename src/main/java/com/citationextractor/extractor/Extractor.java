@@ -52,14 +52,14 @@ public class Extractor {
 
     public AllTypeCitationsResult extractAll(PDDocument document) throws IOException {
 
-        LinkedHashMap<Integer, List<AnnotatedTradCitation>> tradCitations = extractTradCitations(document);
+        LinkedHashMap<Integer, List<CitationWithNote>> tradCitations = extractTradCitations(document);
         LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = extractHarvardCitations(document);
 
         return new AllTypeCitationsResult(harvardCitations, tradCitations);
 
     }
 
-    private LinkedHashMap<Integer, List<AnnotatedTradCitation>> extractTradCitations(PDDocument document)
+    private LinkedHashMap<Integer, List<CitationWithNote>> extractTradCitations(PDDocument document)
             throws IOException {
 
         int pageCount = document.getNumberOfPages();
@@ -102,16 +102,15 @@ public class Extractor {
             foundCitations.put(page, citationAnnotator.getAnnotatedCitations(citationsCandidatesPerPage,
                     notesCandidatesPerPage, context));
 
-            // forth : we associate with footnote content
+            // forth : we get footnote content associate with note number
             footnotesPerPage.put(page, footnoteExtractor.getFootnotes(context, notesCandidatesPerPage));
 
         }
 
-        // on peut venir associer :
-        List<CitationWithNote> citationWithNote = footnoteAssociator.associateCitationWithFootnote(foundCitations, footnotesPerPage);
-        System.out.println(citationWithNote);
-        
-        return foundCitations;
+        // finally : associate citation with footnote
+        LinkedHashMap<Integer, List<CitationWithNote>> citationWithNote = footnoteAssociator.associateCitationWithFootnote(foundCitations, footnotesPerPage);
+
+        return citationWithNote;
     }
 
     private LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> extractHarvardCitations(PDDocument document)

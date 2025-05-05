@@ -41,9 +41,7 @@ public class App {
 
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
-            // for (int i : citationsPerPage.keySet()) {
-            //     System.out.println("Page " + i + " : " + citationsPerPage.get(i));
-            // }
+            System.out.println(citationsPerPage);
             
         } catch (Exception e) {
             System.out.println(e);

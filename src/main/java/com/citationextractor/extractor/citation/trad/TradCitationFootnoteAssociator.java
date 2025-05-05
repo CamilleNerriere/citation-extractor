@@ -11,18 +11,22 @@ import com.citationextractor.model.footnote.Footnote;
 
 public class TradCitationFootnoteAssociator implements ITradCitationFootnoteAssociator {
     @Override
-    public List<CitationWithNote> associateCitationWithFootnote(
+    public LinkedHashMap<Integer, List<CitationWithNote>> associateCitationWithFootnote(
             LinkedHashMap<Integer, List<AnnotatedTradCitation>> citations,
             LinkedHashMap<Integer, List<Footnote>> footnotes) {
 
         Set<Integer> pages = citations.keySet();
-        List<CitationWithNote> citationsWithNotes = new ArrayList<>();
+        // List<CitationWithNote> citationsWithNotes = new ArrayList<>();
+
+        LinkedHashMap<Integer, List<CitationWithNote>> citationsWithNotes = new LinkedHashMap<>();
 
         for (int page : pages) {
             List<AnnotatedTradCitation> citationsPerPage = citations.get(page);
             List<Footnote> footnotePerPage = footnotes.get(page);
 
-            if (footnotePerPage == null) continue;
+            if (footnotePerPage == null || footnotePerPage.isEmpty() || citationsPerPage == null
+                    || citationsPerPage.isEmpty())
+                continue;
 
             List<CitationWithNote> citationsPerPageWithFootnotes = new ArrayList<>();
 
@@ -33,11 +37,12 @@ public class TradCitationFootnoteAssociator implements ITradCitationFootnoteAsso
                         .filter(f -> f.getNoteNumber().equals(noteNumber)).findAny().orElse(null);
 
                 if (footnote == null)
-                    continue;;
+                    continue;
+                ;
 
                 citationsPerPageWithFootnotes.add(new CitationWithNote(citation, footnote.getText()));
             }
-            citationsWithNotes.addAll(citationsPerPageWithFootnotes);
+            citationsWithNotes.put(page, citationsPerPageWithFootnotes);
         }
 
         return citationsWithNotes;

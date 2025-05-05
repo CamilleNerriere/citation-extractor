@@ -9,6 +9,6 @@ import com.citationextractor.model.footnote.Footnote;
 
 
 public interface ITradCitationFootnoteAssociator {
-    public List<CitationWithNote> associateCitationWithFootnote(LinkedHashMap<Integer, List<AnnotatedTradCitation>> citations,
+    public LinkedHashMap<Integer, List<CitationWithNote>> associateCitationWithFootnote(LinkedHashMap<Integer, List<AnnotatedTradCitation>> citations,
             LinkedHashMap<Integer, List<Footnote>> footnotesPerPage);
 }

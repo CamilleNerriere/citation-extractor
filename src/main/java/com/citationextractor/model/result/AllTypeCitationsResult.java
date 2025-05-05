@@ -4,8 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
-import com.citationextractor.model.citation.AnnotatedTradCitation;
+import com.citationextractor.model.citation.CitationWithNote;
 
-public record AllTypeCitationsResult(LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations, LinkedHashMap<Integer, List<AnnotatedTradCitation>> tradCitations) {
+public record AllTypeCitationsResult(LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations, LinkedHashMap<Integer, List<CitationWithNote>> tradCitations) {
 
 }
