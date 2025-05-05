@@ -13,7 +13,7 @@ public class AnnotatedTradCitation {
         return baseCitation;
     }
 
-    public String getNoteNumberAString(){
+    public String getNoteNumber(){
         return noteNumberAString;
     }
 

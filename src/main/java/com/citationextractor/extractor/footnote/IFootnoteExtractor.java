@@ -1,4 +1,4 @@
-package com.citationextractor.extractor.citation.trad;
+package com.citationextractor.extractor.footnote;
 
 import java.util.LinkedHashMap;
 import java.util.List;

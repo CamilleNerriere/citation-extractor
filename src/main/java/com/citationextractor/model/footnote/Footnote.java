@@ -25,7 +25,7 @@ private final String text;
         return page;
     }
 
-    public String getNoteNumString(){
+    public String getNoteNumber(){
         return noteNumberAsString;
     }
 
@@ -50,7 +50,7 @@ private final String text;
         return "Citation{" +
                 "text='" + text + '\'' +
                 ", page=" + page +
-                ", note number=" + noteNumberAsString +
+                ", note=" + noteNumberAsString +
                 ", startPos=" + startPos +
                 ", endPos=" + endPos +
                 '}';

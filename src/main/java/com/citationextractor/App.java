@@ -8,12 +8,14 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import com.citationextractor.extractor.Extractor;
 import com.citationextractor.extractor.citation.harvard.HarvardCitationExtractor;
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
-import com.citationextractor.extractor.citation.trad.FootnoteExtractor;
-import com.citationextractor.extractor.citation.trad.IFootnoteExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationAnnotator;
 import com.citationextractor.extractor.citation.trad.ITradCitationExtractor;
+import com.citationextractor.extractor.citation.trad.ITradCitationFootnoteAssociator;
 import com.citationextractor.extractor.citation.trad.TradCitationAnnotator;
 import com.citationextractor.extractor.citation.trad.TradCitationExtractor;
+import com.citationextractor.extractor.citation.trad.TradCitationFootnoteAssociator;
+import com.citationextractor.extractor.footnote.FootnoteExtractor;
+import com.citationextractor.extractor.footnote.IFootnoteExtractor;
 import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.extractor.note.NoteDetector;
 import com.citationextractor.model.result.AllTypeCitationsResult;
@@ -33,8 +35,9 @@ public class App {
             ITradCitationAnnotator citationAnnotator = new TradCitationAnnotator();
             IHarvardCitationExtractor harvardExtractor = new HarvardCitationExtractor();
             IFootnoteExtractor footnoteExtractor = new FootnoteExtractor();
+            ITradCitationFootnoteAssociator footnoteAssociator = new TradCitationFootnoteAssociator();
 
-            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator, harvardExtractor, footnoteExtractor);
+            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator, harvardExtractor, footnoteExtractor, footnoteAssociator);
 
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
