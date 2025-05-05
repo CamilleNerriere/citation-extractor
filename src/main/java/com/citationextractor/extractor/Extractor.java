@@ -122,7 +122,6 @@ public class Extractor {
 
             // second : we get all small number that can be a note calls
             notesCandidatesPerPage.put(page, noteDetector.getNoteCandidates(context));
-            // notesCandidatesPerPage.put(page, noteDetector.getNoteCandidates(context));
 
             // third : we match to eleminate text between quotation marks that is note
             // citation

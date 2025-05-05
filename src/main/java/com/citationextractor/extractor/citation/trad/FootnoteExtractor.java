@@ -36,18 +36,6 @@ public class FootnoteExtractor implements IFootnoteExtractor {
         List<NoteCandidate> footnoteCandidates = getFootnoteCandidates(pageNoteCandidates);
 
 
-        /**
-         * See if necessary to sort footnoteCandidates by order asc
-         * 
-         * footnoteCandidates.sort(Comparator.comparing(note -> {
-         * try {
-         * return Integer.valueOf(note.getText());
-         * } catch (NumberFormatException e) {
-         * return Integer.MAX_VALUE; // if non numeric value
-         * }
-         * }));
-         */
-
         List<Footnote> footnotes = new ArrayList<>();
         Set<Integer> alreadyTreatedCandidateNumbers = new HashSet<>();
 
