@@ -124,6 +124,8 @@ public class Extractor {
 
             System.out.println(footnotesPerPage);
 
+            // System.out.println(notesCandidatesPerPage);
+
         }
         return foundCitations;
     }
