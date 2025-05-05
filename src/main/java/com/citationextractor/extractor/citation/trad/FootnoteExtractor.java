@@ -5,8 +5,10 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.text.TextPosition;
 
@@ -21,7 +23,6 @@ public class FootnoteExtractor implements IFootnoteExtractor {
             ExtractionContext context,
             LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage) {
 
-
         List<TextPosition> positions = context.getPositions();
 
         int page = context.getPage();
@@ -29,10 +30,11 @@ public class FootnoteExtractor implements IFootnoteExtractor {
         List<NoteCandidate> pageNoteCandidates = notesCandidatesPerPage.get(page);
 
         if (pageNoteCandidates == null || pageNoteCandidates.isEmpty()) {
-            return null;
+            return new ArrayList<>();
         }
 
         List<NoteCandidate> footnoteCandidates = getFootnoteCandidates(pageNoteCandidates);
+
 
         /**
          * See if necessary to sort footnoteCandidates by order asc
@@ -45,7 +47,6 @@ public class FootnoteExtractor implements IFootnoteExtractor {
          * }
          * }));
          */
-
 
         List<Footnote> footnotes = new ArrayList<>();
         Set<Integer> alreadyTreatedCandidateNumbers = new HashSet<>();
@@ -77,7 +78,7 @@ public class FootnoteExtractor implements IFootnoteExtractor {
                 int candidateNoteNumber = Integer.parseInt(noteNumberAsString);
 
                 // Avoid multiple treatment
-                if(alreadyTreatedCandidateNumbers.contains(candidateNoteNumber)){
+                if (alreadyTreatedCandidateNumbers.contains(candidateNoteNumber)) {
                     continue;
                 }
                 alreadyTreatedCandidateNumbers.add(candidateNoteNumber);
@@ -125,7 +126,8 @@ public class FootnoteExtractor implements IFootnoteExtractor {
                 // in case it's the last note on page
                 if (!noteEnded && footnote.length() > 0) {
                     endPos = positions.get(positions.size() - 1);
-                    Footnote completeFootnote = new Footnote(footnote.toString(), page, noteNumberAsString, startPos, endPos);
+                    Footnote completeFootnote = new Footnote(footnote.toString(), page, noteNumberAsString, startPos,
+                            endPos);
                     footnotes.add(completeFootnote);
                     footnote.setLength(0);
                 }
@@ -137,23 +139,14 @@ public class FootnoteExtractor implements IFootnoteExtractor {
     }
 
     private List<NoteCandidate> getFootnoteCandidates(List<NoteCandidate> pageNoteCandidates) {
-        List<NoteCandidate> footnoteCandidates = new ArrayList<>();
-
-        for (NoteCandidate note : pageNoteCandidates) {
-            String number = note.getText();
-
-            Optional<NoteCandidate> candidate = pageNoteCandidates.stream()
-                    .filter(n -> n.getText().equals(number))
-                    .max(Comparator.comparing(NoteCandidate::getY));
-
-            if (candidate.isPresent()) {
-                footnoteCandidates.add(candidate.get());
-            } else {
-                return null;
-            }
-        }
-
-        return footnoteCandidates;
+        return pageNoteCandidates.stream()
+                .collect(Collectors.groupingBy(NoteCandidate::getText))
+                .values().stream()
+                .map(group -> group.stream()
+                        .max(Comparator.comparing(NoteCandidate::getY))
+                        .orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private NoteCandidate getNextNoteCandidate(List<NoteCandidate> footnoteCandidates, int candidateNoteNumber) {
@@ -183,14 +176,6 @@ public class FootnoteExtractor implements IFootnoteExtractor {
         }
 
         return null;
-    }
-
-    private float getAverageXNotePosition(List<NoteCandidate> footnoteCandidates) {
-        float averageX = (float) footnoteCandidates.stream()
-                .mapToDouble(NoteCandidate::getX)
-                .average()
-                .orElse(0);
-        return averageX;
     }
 
     private boolean isNumeric(String s) {
