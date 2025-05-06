@@ -5,6 +5,8 @@ import java.io.File;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
+import com.citationextractor.exporter.CitationExporter;
+import com.citationextractor.exporter.ExporterFactory;
 import com.citationextractor.extractor.Extractor;
 import com.citationextractor.extractor.citation.harvard.HarvardCitationExtractor;
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
@@ -18,6 +20,7 @@ import com.citationextractor.extractor.footnote.FootnoteExtractor;
 import com.citationextractor.extractor.footnote.IFootnoteExtractor;
 import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.extractor.note.NoteDetector;
+import com.citationextractor.model.context.ExporterContext;
 import com.citationextractor.model.result.AllTypeCitationsResult;
 import com.citationextractor.utils.FontStats;
 import com.citationextractor.utils.IFontStats;
@@ -42,6 +45,12 @@ public class App {
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
             System.out.println(citationsPerPage);
+
+            ExporterContext exporterContext = new ExporterContext(citationsPerPage.tradCitations(), citationsPerPage.harvardCitations(), "citations.txt");
+            String format = "txt";
+            ExporterFactory exporterFactory = new ExporterFactory();
+            CitationExporter citationExporter = exporterFactory.getExporter(exporterContext, format);
+            citationExporter.export();
             
         } catch (Exception e) {
             System.out.println(e);

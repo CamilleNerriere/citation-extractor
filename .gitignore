@@ -1,4 +1,4 @@
 /target/
 *.class
 *.log
-/test
+test.pdf
