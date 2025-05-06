@@ -16,8 +16,7 @@ public class TradCitationFootnoteAssociator implements ITradCitationFootnoteAsso
             LinkedHashMap<Integer, List<Footnote>> footnotes) {
 
         Set<Integer> pages = citations.keySet();
-        // List<CitationWithNote> citationsWithNotes = new ArrayList<>();
-
+       
         LinkedHashMap<Integer, List<CitationWithNote>> citationsWithNotes = new LinkedHashMap<>();
 
         for (int page : pages) {
@@ -38,7 +37,6 @@ public class TradCitationFootnoteAssociator implements ITradCitationFootnoteAsso
 
                 if (footnote == null)
                     continue;
-                ;
 
                 citationsPerPageWithFootnotes.add(new CitationWithNote(citation, footnote.getText()));
             }

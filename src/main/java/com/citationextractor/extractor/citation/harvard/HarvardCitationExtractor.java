@@ -43,8 +43,7 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
         return new HarvardCitationExtractionResult(allCitations, updatedTroncated);
     }
 
-    @Override
-    public HarvardCitationExtractionResult extractCitations(ExtractionContext context, String openingQuote,
+    private HarvardCitationExtractionResult extractCitations(ExtractionContext context, String openingQuote,
             TroncatedCitation troncatedCitationFromLastPage) {
 
         List<AnnotatedHarvardCitation> citations = new ArrayList<>();
@@ -85,8 +84,8 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
         return new HarvardCitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
     }
 
-    @Override
-    public OnePotentialCitationResult extractOneCitation(ExtractionContext context, String openingQuote,
+
+    private OnePotentialCitationResult extractOneCitation(ExtractionContext context, String openingQuote,
             String remainingTextFromLastPage, int start) {
 
         String c1 = openingQuote;
@@ -145,8 +144,8 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
 
     }
 
-    @Override
-    public AnnotatedHarvardCitation extractOneHarvardCitation(ExtractionContext context, Citation citation,
+
+    private AnnotatedHarvardCitation extractOneHarvardCitation(ExtractionContext context, Citation citation,
             int start) {
 
         List<TextPosition> positions = context.getPositions();
@@ -177,8 +176,7 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
         return null;
     }
 
-    @Override
-    public HarvardExtractionResult getExtractionResult(ExtractionContext context, OnePotentialCitationResult citationResult) {
+    private HarvardExtractionResult getExtractionResult(ExtractionContext context, OnePotentialCitationResult citationResult) {
         String truncContent = citationResult.trunc().content();
         String truncOpeningQuote = citationResult.trunc().openingQuote();
         if (!citationResult.citationIsEmpty()) {

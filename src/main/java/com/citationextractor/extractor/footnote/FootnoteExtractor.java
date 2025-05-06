@@ -35,23 +35,14 @@ public class FootnoteExtractor implements IFootnoteExtractor {
 
         List<NoteCandidate> footnoteCandidates = getFootnoteCandidates(pageNoteCandidates);
 
-
-        List<Footnote> footnotes = new ArrayList<>();
         Set<Integer> alreadyTreatedCandidateNumbers = new HashSet<>();
+        List<Footnote> footnotes = new ArrayList<>();
 
         for (int i = 0; i < positions.size(); i++) {
             TextPosition pos = positions.get(i);
-            float xPosition = pos.getXDirAdj();
-            float yPosition = pos.getYDirAdj();
             String c = pos.getUnicode();
 
-            Optional<NoteCandidate> matchingCandidate = footnoteCandidates.stream()
-                    .filter(note -> {
-                        float deltaX = Math.abs(note.getX() - xPosition);
-                        float deltaY = Math.abs(note.getY() - yPosition);
-                        return deltaX < 10.0f && deltaY < 10.0f;
-                    })
-                    .findFirst();
+            Optional<NoteCandidate> matchingCandidate = findMatchingCandidate(pos, footnoteCandidates);
 
             /* We find a match, start the treatment */
             if (matchingCandidate.isPresent()) {
@@ -59,66 +50,23 @@ public class FootnoteExtractor implements IFootnoteExtractor {
                 NoteCandidate candidate = matchingCandidate.get();
 
                 String noteNumberAsString = candidate.getText();
-                if (!isNumeric(noteNumberAsString)) {
+
+                if (!isNumeric(noteNumberAsString))
                     continue;
-                }
 
                 int candidateNoteNumber = Integer.parseInt(noteNumberAsString);
 
                 // Avoid multiple treatment
-                if (alreadyTreatedCandidateNumbers.contains(candidateNoteNumber)) {
+                if (alreadyTreatedCandidateNumbers.contains(candidateNoteNumber))
                     continue;
-                }
+
                 alreadyTreatedCandidateNumbers.add(candidateNoteNumber);
 
                 NoteCandidate nextNoteCandidate = getNextNoteCandidate(footnoteCandidates, candidateNoteNumber);
 
-                /** Set variables to stock footnote infos */
-                StringBuilder footnote = new StringBuilder();
-                footnote.append(c);
+                Footnote footnote = extracFootnote(positions, i, nextNoteCandidate, page, noteNumberAsString);
 
-                TextPosition startPos = positions.get(i);
-                TextPosition endPos;
-                boolean noteEnded = false;
-
-                // Start finding next characters
-
-                for (int j = i + 1; j < positions.size(); j++) {
-
-                    TextPosition newPos = positions.get(j);
-                    String cha = newPos.getUnicode();
-
-                    // Loop ends if we're approximatly at the next note position
-
-                    if (nextNoteCandidate != null) {
-                        float XNextNote = nextNoteCandidate.getX();
-                        float YNextNote = nextNoteCandidate.getY();
-
-                        float deltaX = Math.abs(newPos.getXDirAdj() - XNextNote);
-                        float deltaY = Math.abs(newPos.getYDirAdj() - YNextNote);
-
-                        if (deltaX < 10.0f && deltaY < 10.0f) {
-                            endPos = positions.get(j - 1);
-                            Footnote completeFootnote = new Footnote(footnote.toString(), page, noteNumberAsString,
-                                    startPos, endPos);
-                            footnotes.add(completeFootnote);
-                            footnote.setLength(0);
-                            noteEnded = true;
-                            break;
-                        }
-                    }
-
-                    footnote.append(cha);
-                }
-
-                // in case it's the last note on page
-                if (!noteEnded && footnote.length() > 0) {
-                    endPos = positions.get(positions.size() - 1);
-                    Footnote completeFootnote = new Footnote(footnote.toString(), page, noteNumberAsString, startPos,
-                            endPos);
-                    footnotes.add(completeFootnote);
-                    footnote.setLength(0);
-                }
+                if(footnote != null) footnotes.add(footnote);
             }
 
         }
@@ -135,6 +83,70 @@ public class FootnoteExtractor implements IFootnoteExtractor {
                         .orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    private Optional<NoteCandidate> findMatchingCandidate(TextPosition pos, List<NoteCandidate> footnoteCandidates) {
+
+        float xPosition = pos.getXDirAdj();
+        float yPosition = pos.getYDirAdj();
+
+        return footnoteCandidates.stream()
+                .filter(note -> {
+                    float deltaX = Math.abs(note.getX() - xPosition);
+                    float deltaY = Math.abs(note.getY() - yPosition);
+                    return deltaX < 10.0f && deltaY < 10.0f;
+                })
+                .findFirst();
+    }
+
+    private Footnote extracFootnote(List<TextPosition> positions, int i, NoteCandidate nextNoteCandidate, int page, String noteNumberAsString) {
+        /** Set variables to stock footnote infos */
+        StringBuilder footnote = new StringBuilder();
+        TextPosition pos = positions.get(i);
+        String c = pos.getUnicode();
+        footnote.append(c);
+
+        TextPosition startPos = positions.get(i);
+        TextPosition endPos;
+        boolean noteEnded = false;
+
+        // Start finding next characters
+
+        for (int j = i + 1; j < positions.size(); j++) {
+
+            TextPosition newPos = positions.get(j);
+            String cha = newPos.getUnicode();
+
+            // Loop ends if we're approximatly at the next note position
+
+            if (nextNoteCandidate != null) {
+                float XNextNote = nextNoteCandidate.getX();
+                float YNextNote = nextNoteCandidate.getY();
+
+                float deltaX = Math.abs(newPos.getXDirAdj() - XNextNote);
+                float deltaY = Math.abs(newPos.getYDirAdj() - YNextNote);
+
+                if (deltaX < 10.0f && deltaY < 10.0f) {
+                    endPos = positions.get(j - 1);
+                    Footnote completeFootnote = new Footnote(footnote.toString(), page, noteNumberAsString,
+                            startPos, endPos);
+                    noteEnded = true;
+                    return completeFootnote;
+                }
+            }
+
+            footnote.append(cha);
+        }
+
+        // in case it's the last note on page
+        if (!noteEnded && footnote.length() > 0) {
+            endPos = positions.get(positions.size() - 1);
+            Footnote completeFootnote = new Footnote(footnote.toString(), page, noteNumberAsString, startPos,
+                    endPos);
+            return completeFootnote;
+        }
+
+        return null;
     }
 
     private NoteCandidate getNextNoteCandidate(List<NoteCandidate> footnoteCandidates, int candidateNoteNumber) {

@@ -1,4 +1,4 @@
-package com.citationextractor.model.context;
+package com.citationextractor.exporter;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.citationextractor.exporter.CitationExporter;
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
 import com.citationextractor.model.citation.CitationWithNote;
+import com.citationextractor.model.context.ExporterContext;
 
-public class TxtCitationExporter implements CitationExporter {
+public class TxtCitationExporter implements ICitationExporter {
 
     private final ExporterContext context;
 

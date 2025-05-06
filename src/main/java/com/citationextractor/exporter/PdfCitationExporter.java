@@ -1,4 +1,4 @@
-package com.citationextractor.model.context;
+package com.citationextractor.exporter;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -12,11 +12,11 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 
-import com.citationextractor.exporter.CitationExporter;
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
 import com.citationextractor.model.citation.CitationWithNote;
+import com.citationextractor.model.context.ExporterContext;
 
-public class PdfCitationExporter implements CitationExporter {
+public class PdfCitationExporter implements ICitationExporter {
 
     private final ExporterContext context;
 

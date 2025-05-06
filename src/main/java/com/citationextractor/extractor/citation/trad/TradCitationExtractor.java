@@ -41,8 +41,8 @@ public class TradCitationExtractor implements ITradCitationExtractor {
         return new TradCitationExtractionResult(allCitations, updatedTroncated);
     }
 
-    @Override
-    public TradCitationExtractionResult extractCitations(ExtractionContext context, String openingQuote,
+    
+    private TradCitationExtractionResult extractCitations(ExtractionContext context, String openingQuote,
             TroncatedCitation troncatedCitationFromLastPage) {
 
         List<Citation> citations = new ArrayList<>();
@@ -83,8 +83,7 @@ public class TradCitationExtractor implements ITradCitationExtractor {
         return new TradCitationExtractionResult(citations, new TroncatedCitation(truncContent, truncOpeningQuote));
     }
 
-    @Override
-    public OneTradCitationResult extractOneCitation(ExtractionContext context, String openingQuote,
+    private OneTradCitationResult extractOneCitation(ExtractionContext context, String openingQuote,
             String remainingTextFromLastPage, int start) {
 
 
