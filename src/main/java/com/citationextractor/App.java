@@ -46,8 +46,8 @@ public class App {
 
             // System.out.println(citationsPerPage);
 
-            ExporterContext exporterContext = new ExporterContext(citationsPerPage.tradCitations(), citationsPerPage.harvardCitations(), "citations.txt");
-            String format = "txt";
+            ExporterContext exporterContext = new ExporterContext(citationsPerPage.tradCitations(), citationsPerPage.harvardCitations(), "citations.pdf");
+            String format = "pdf";
             ExporterFactory exporterFactory = new ExporterFactory();
             CitationExporter citationExporter = exporterFactory.getExporter(exporterContext, format);
             citationExporter.export();
