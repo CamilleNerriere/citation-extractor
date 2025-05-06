@@ -4,6 +4,8 @@ import java.io.File;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.citationextractor.exporter.ExporterFactory;
 import com.citationextractor.exporter.ICitationExporter;
@@ -26,12 +28,40 @@ import com.citationextractor.utils.FontStats;
 import com.citationextractor.utils.IFontStats;
 
 public class App {
+    private static final Logger logger = LoggerFactory.getLogger(App.class);
+
     public static void main(String[] args) {
 
-        File file = new File("src/pdf/test.pdf");
+        if (args.length < 6) {
+            System.out.println("Usage: java -jar citation-extractor.jar -i input.pdf -o output.pdf -f [pdf|txt]");
+            return;
+        }
+
+        String inputPath = null, outputPath = null, format = null;
+
+        for (int i = 0; i < args.length; i++) {
+            switch (args[i]) {
+                case "-i" -> inputPath = args[++i];
+                case "-o" -> outputPath = args[++i];
+                case "-f" -> format = args[++i];
+                default -> {
+                    System.out.println("Unknown argument: " + args[i]);
+                    return;
+                }
+            }
+        }
+
+        if (inputPath == null || outputPath == null || format == null) {
+            System.out.println("Missing required arguments.");
+            return;
+        }
+
+        File file = new File(inputPath);
 
         try (PDDocument document = Loader.loadPDF(file)) {
-            
+
+            logger.info("Starting app...");
+
             IFontStats fontStats = new FontStats();
             INoteDetector noteDetector = new NoteDetector();
             ITradCitationExtractor citationExtractor = new TradCitationExtractor();
@@ -40,19 +70,26 @@ public class App {
             IFootnoteExtractor footnoteExtractor = new FootnoteExtractor();
             ITradCitationFootnoteAssociator footnoteAssociator = new TradCitationFootnoteAssociator();
 
-            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator, harvardExtractor, footnoteExtractor, footnoteAssociator);
+            Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator,
+                    harvardExtractor, footnoteExtractor, footnoteAssociator);
 
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
-            ExporterContext exporterContext = new ExporterContext(citationsPerPage.tradCitations(), citationsPerPage.harvardCitations(), "citations.pdf");
-            String format = "pdf";
+            ExporterContext exporterContext = new ExporterContext(citationsPerPage.tradCitations(),
+                    citationsPerPage.harvardCitations(), outputPath);
+
             ExporterFactory exporterFactory = new ExporterFactory();
+
             ICitationExporter citationExporter = exporterFactory.getExporter(exporterContext, format);
+
+            logger.info("Exporting citations to PDF...");
             citationExporter.export();
-            
+
+            logger.info("Extraction and export completed successfully.");
+
         } catch (Exception e) {
-            System.out.println(e);
-            e.printStackTrace();
+            logger.error("Error during extractor execution", e);
+            System.exit(1);
         }
 
     }

@@ -1,0 +1,18 @@
+<configuration>
+
+    <!-- Console logging -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Mute DEBUG logs for FontBox -->
+    <logger name="org.apache.fontbox.ttf.gsub" level="ERROR" />
+
+    <!-- Root logger: change level here if needed (INFO, DEBUG, ERROR) -->
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+</configuration>

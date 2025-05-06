@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
 import com.citationextractor.model.citation.CitationWithNote;
 import com.citationextractor.model.context.ExporterContext;
@@ -15,6 +18,8 @@ import com.citationextractor.model.context.ExporterContext;
 public class TxtCitationExporter implements ICitationExporter {
 
     private final ExporterContext context;
+
+    private static final Logger logger = LoggerFactory.getLogger(TxtCitationExporter.class);
 
     public TxtCitationExporter(ExporterContext context) {
         this.context = context;
@@ -39,45 +44,45 @@ public class TxtCitationExporter implements ICitationExporter {
 
             boolean hasClassical = tradCitations.get(page) != null && !tradCitations.get(page).isEmpty();
             boolean hasHarvard = harvardCitations.get(page) != null && !harvardCitations.get(page).isEmpty();
-            
+
             if (!hasClassical && !hasHarvard) {
-                continue; 
+                continue;
             }
 
             txt.append(System.lineSeparator());
             txt.append("---------Page ").append(page).append("---------");
             txt.append(System.lineSeparator());
-        
+
             // Classical
             List<CitationWithNote> classical = tradCitations.get(page);
             if (classical != null && !classical.isEmpty()) {
                 txt.append(System.lineSeparator());
                 txt.append("--------------Classical Type Citation------------");
                 txt.append(System.lineSeparator());
-        
+
                 for (CitationWithNote citation : classical) {
                     String cit = citation.getBaseAnnotatedCitation().getBaseCitation().getText();
                     String noteNumber = citation.getBaseAnnotatedCitation().getNoteNumber();
                     String footnote = citation.getFootnote();
-        
+
                     txt.append(System.lineSeparator());
                     txt.append("Note ").append(noteNumber).append(" : ").append(cit).append("\n");
                     txt.append("Footnote : ").append(footnote);
                     txt.append(System.lineSeparator());
                 }
             }
-        
+
             // Harvard
             List<AnnotatedHarvardCitation> harvard = harvardCitations.get(page);
             if (harvard != null && !harvard.isEmpty()) {
                 txt.append(System.lineSeparator());
                 txt.append("--------------Harvard Type Citation------------");
                 txt.append(System.lineSeparator());
-        
+
                 for (AnnotatedHarvardCitation citation : harvard) {
                     String cit = citation.getBaseCitation().getText();
                     String note = citation.getNoteContent();
-        
+
                     txt.append(System.lineSeparator());
                     txt.append(cit).append("\n");
                     txt.append("Note : ").append(note);
@@ -85,14 +90,16 @@ public class TxtCitationExporter implements ICitationExporter {
                 }
             }
         }
-        
 
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(outPutPath));
             writer.write(txt.toString());
             writer.close();
+            logger.info("Txt export completed");
         } catch (IOException e) {
-            System.out.println("Unable to export citations in txt.");
+
+            logger.warn("Error during txt export", e);
+            throw new RuntimeException("Error during txt export", e);
         }
     }
 }

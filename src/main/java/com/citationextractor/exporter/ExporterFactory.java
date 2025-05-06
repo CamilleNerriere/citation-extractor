@@ -8,7 +8,7 @@ public class ExporterFactory {
         return switch (format.toLowerCase()) {
             case "txt" -> new TxtCitationExporter(context);
             case "pdf" -> new PdfCitationExporter(context);
-            default -> throw new IllegalArgumentException("FUnknown format : " + format);
+            default -> throw new IllegalArgumentException("Unknown format : " + format);
         };
     }
 }

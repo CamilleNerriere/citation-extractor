@@ -11,6 +11,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
 import com.citationextractor.model.citation.CitationWithNote;
@@ -24,6 +26,8 @@ public class PdfCitationExporter implements ICitationExporter {
     private static final float START_Y = 750;
     private static final float LINE_HEIGHT = 14.5f;
     private static final float BOTTOM_MARGIN = 50;
+
+    private static final Logger logger = LoggerFactory.getLogger(PdfCitationExporter.class);
 
     public PdfCitationExporter(ExporterContext context) {
         this.context = context;
@@ -55,7 +59,7 @@ public class PdfCitationExporter implements ICitationExporter {
 
             cs = writeCenteredLine(document, cs, boldFont, 18, "Export Result", yPosRef);
             cs = addLineBreak(cs, yPosRef, 2);
-            yPosRef[0] -= LINE_HEIGHT; 
+            yPosRef[0] -= LINE_HEIGHT;
 
             for (int pageNum : allPages) {
                 List<CitationWithNote> classical = tradCitations.get(pageNum);
@@ -85,7 +89,7 @@ public class PdfCitationExporter implements ICitationExporter {
                         cs = writeLines(document, cs, regularFont, 12, cit, yPosRef);
                         cs = writeLines(document, cs, boldFont, 12, "Footnote :", yPosRef);
                         cs = writeLines(document, cs, regularFont, 12, footnote, yPosRef);
-                        yPosRef[0] -= LINE_HEIGHT; 
+                        yPosRef[0] -= LINE_HEIGHT;
                         cs = addLineBreak(cs, yPosRef, 1);
                     }
                 }
@@ -104,19 +108,22 @@ public class PdfCitationExporter implements ICitationExporter {
                         cs = writeLines(document, cs, regularFont, 12, cit, yPosRef);
                         cs = writeLines(document, cs, boldFont, 12, "Note :", yPosRef);
                         cs = writeLines(document, cs, regularFont, 12, note, yPosRef);
-                        yPosRef[0] -= LINE_HEIGHT; 
+                        yPosRef[0] -= LINE_HEIGHT;
                         cs = addLineBreak(cs, yPosRef, 1);
                     }
                 }
 
-                yPosRef[0] -= LINE_HEIGHT * 2; 
+                yPosRef[0] -= LINE_HEIGHT * 2;
             }
 
             cs.endText();
             cs.close();
             document.save(outputPath);
+            logger.info("Pdf export completed: " + outputPath);
 
         } catch (IOException e) {
+
+            logger.warn("Error during pdf export", e);
             throw new RuntimeException("Error during pdf export", e);
         }
     }
@@ -171,8 +178,8 @@ public class PdfCitationExporter implements ICitationExporter {
             cs.setLeading(LINE_HEIGHT);
             cs.beginText();
             yPosRef[0] = START_Y;
-            cs.newLineAtOffset(MARGIN, yPosRef[0]); 
-            cs.setFont(font, fontSize); 
+            cs.newLineAtOffset(MARGIN, yPosRef[0]);
+            cs.setFont(font, fontSize);
 
         }
 
@@ -214,7 +221,7 @@ public class PdfCitationExporter implements ICitationExporter {
     private PDPageContentStream addLineBreak(PDPageContentStream cs, float[] yPosRef) throws IOException {
         return addLineBreak(cs, yPosRef, 1);
     }
-    
+
     private PDPageContentStream addLineBreak(PDPageContentStream cs, float[] yPosRef, int lines) throws IOException {
         for (int i = 0; i < lines; i++) {
             cs.newLine();

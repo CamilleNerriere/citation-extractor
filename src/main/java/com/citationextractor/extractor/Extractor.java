@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.TextPosition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationAnnotator;
@@ -37,6 +39,8 @@ public class Extractor {
     private final IFootnoteExtractor footnoteExtractor;
     private final ITradCitationFootnoteAssociator footnoteAssociator;
 
+    private static final Logger logger = LoggerFactory.getLogger(Extractor.class);
+
     public Extractor(final IFontStats fontStats, final INoteDetector noteDetector,
             final ITradCitationExtractor citationExtractor, final ITradCitationAnnotator citationAnnotator,
             final IHarvardCitationExtractor harvardExtractor, final IFootnoteExtractor footnoteExtractor,
@@ -52,15 +56,24 @@ public class Extractor {
 
     public AllTypeCitationsResult extractAll(PDDocument document) throws IOException {
 
-        LinkedHashMap<Integer, List<CitationWithNote>> tradCitations = extractTradCitations(document);
-        LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = extractHarvardCitations(document);
+        logger.info("Begin Extraction");
+        try {
+            LinkedHashMap<Integer, List<CitationWithNote>> tradCitations = extractTradCitations(document);
+            LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = extractHarvardCitations(document);
 
-        return new AllTypeCitationsResult(harvardCitations, tradCitations);
+            logger.info("Extraction ended with success");
+            return new AllTypeCitationsResult(harvardCitations, tradCitations);
+        } catch (IOException e) {
+            logger.error("I/O Error during extraction ", e);
+            throw new RuntimeException("Error during extraction", e);
+        }
 
     }
 
     private LinkedHashMap<Integer, List<CitationWithNote>> extractTradCitations(PDDocument document)
             throws IOException {
+
+        logger.debug("Starting trad citations extraction");
 
         int pageCount = document.getNumberOfPages();
 
@@ -72,6 +85,9 @@ public class Extractor {
         TroncatedCitation troncatedCitationFromLastPage = new TroncatedCitation(null, null);
 
         for (int page = 1; page <= pageCount; page++) {
+
+            logger.debug("Analysing page {}", page);
+            final int pageNum = page;
 
             CustomTextStripper stripper = new CustomTextStripper();
             stripper.setStartPage(page);
@@ -105,16 +121,24 @@ public class Extractor {
             // forth : we get footnote content associate with note number
             footnotesPerPage.put(page, footnoteExtractor.getFootnotes(context, notesCandidatesPerPage));
 
+            citationsCandidatesPerPage.get(page).forEach(citation -> {
+                logger.debug("Citation trouvée page {} : \"{}...\"", pageNum,
+                        citation.getText().substring(0, Math.min(40, citation.getText().length())));
+            });
+
         }
 
         // finally : associate citation with footnote
-        LinkedHashMap<Integer, List<CitationWithNote>> citationWithNote = footnoteAssociator.associateCitationWithFootnote(foundCitations, footnotesPerPage);
+        LinkedHashMap<Integer, List<CitationWithNote>> citationWithNote = footnoteAssociator
+                .associateCitationWithFootnote(foundCitations, footnotesPerPage);
 
         return citationWithNote;
     }
 
     private LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> extractHarvardCitations(PDDocument document)
             throws IOException {
+
+        logger.debug("Starting harvard citations extraction");
 
         int pageCount = document.getNumberOfPages();
 
@@ -123,6 +147,10 @@ public class Extractor {
         TroncatedCitation troncatedCitationFromLastPage = new TroncatedCitation(null, null);
 
         for (int page = 1; page <= pageCount; page++) {
+
+            logger.debug("Analysing page {}", page);
+            final int pageNum = page;
+
             CustomTextStripper stripper = new CustomTextStripper();
             stripper.setStartPage(page);
             stripper.setEndPage(page);
@@ -140,6 +168,12 @@ public class Extractor {
                     troncatedCitationFromLastPage);
             harvardCitations.put(page, harvardCitationsResult.harvardCitations());
             troncatedCitationFromLastPage = harvardCitationsResult.troncatedCitation();
+
+            harvardCitations.get(page).forEach(citation -> {
+                logger.debug("Citation trouvée page {} : \"{}...\"", pageNum, 
+                    citation.getBaseCitation().getText().substring(0, Math.min(40, citation.getBaseCitation().getText().length())));
+            });
+            
         }
 
         return harvardCitations;
