@@ -44,7 +44,7 @@ public class App {
 
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
-            System.out.println(citationsPerPage);
+            // System.out.println(citationsPerPage);
 
             ExporterContext exporterContext = new ExporterContext(citationsPerPage.tradCitations(), citationsPerPage.harvardCitations(), "citations.txt");
             String format = "txt";
