@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import com.citationextractor.exporter.ExporterFactory;
 import com.citationextractor.exporter.ICitationExporter;
 import com.citationextractor.extractor.Extractor;
+import com.citationextractor.extractor.citation.bloc.BlocCitationExtractor;
+import com.citationextractor.extractor.citation.bloc.IBlocCitationExtractor;
 import com.citationextractor.extractor.citation.harvard.HarvardCitationExtractor;
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationAnnotator;
@@ -67,11 +69,12 @@ public class App {
             ITradCitationExtractor citationExtractor = new TradCitationExtractor();
             ITradCitationAnnotator citationAnnotator = new TradCitationAnnotator();
             IHarvardCitationExtractor harvardExtractor = new HarvardCitationExtractor();
+            IBlocCitationExtractor blocExtractor = new BlocCitationExtractor();
             IFootnoteExtractor footnoteExtractor = new FootnoteExtractor();
             ITradCitationFootnoteAssociator footnoteAssociator = new TradCitationFootnoteAssociator();
 
             Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator,
-                    harvardExtractor, footnoteExtractor, footnoteAssociator);
+                    harvardExtractor, blocExtractor, footnoteExtractor, footnoteAssociator);
 
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
