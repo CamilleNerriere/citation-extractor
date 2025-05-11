@@ -60,7 +60,7 @@ public class Extractor {
         this.blocExtractor = blocExtractor;
         this.footnoteExtractor = footnoteExtractor;
         this.footnoteAssociator = footnoteAssociator;
-        this.coordStats = coordStats; 
+        this.coordStats = coordStats;
     }
 
     public AllTypeCitationsResult extractAll(PDDocument document) throws IOException {
@@ -71,8 +71,6 @@ public class Extractor {
             LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = extractHarvardCitations(document);
 
             // plug bloc citation to test
-            LineCoordStatsResult lineCoordStatsResult = coordStats.getLineCoordStats(document);
-            logger.info("Line Beginning Median Value : {}, Line End Median Value : {}", lineCoordStatsResult.medianXLineBegining(), lineCoordStatsResult.medianXLineEnd());
             ExtractBlocCitations(document);
 
             logger.info("Extraction ended with success");
@@ -116,7 +114,7 @@ public class Extractor {
 
             // set extraction context
             List<TextPosition> positions = stripper.getTextPositions();
-            ExtractionContext context = setExtractionContext(page, positions);
+            ExtractionContext context = setExtractionContext(page, positions, document);
 
             // first : we get everything that's between quotation marks
 
@@ -175,7 +173,7 @@ public class Extractor {
 
             // set extraction context
             List<TextPosition> positions = stripper.getTextPositions();
-            ExtractionContext context = setExtractionContext(page, positions);
+            ExtractionContext context = setExtractionContext(page, positions, document);
 
             HarvardCitationExtractionResult harvardCitationsResult = harvardExtractor.extractCitationsPerPage(context,
                     troncatedCitationFromLastPage);
@@ -195,7 +193,7 @@ public class Extractor {
 
     private void ExtractBlocCitations(PDDocument document) throws IOException {
 
-        logger.debug("Starting harvard citations extraction");
+        logger.debug("Starting bloc citations extraction");
 
         int pageCount = document.getNumberOfPages();
 
@@ -217,7 +215,7 @@ public class Extractor {
 
             // set extraction context
             List<TextPosition> positions = stripper.getTextPositions();
-            ExtractionContext context = setExtractionContext(page, positions);
+            ExtractionContext context = setExtractionContext(page, positions, document);
 
             blocExtractor.extractCitationsPerPage(context,
                     troncatedCitationFromLastPage);
@@ -238,10 +236,11 @@ public class Extractor {
         }
     }
 
-    private ExtractionContext setExtractionContext(int page, List<TextPosition> positions) {
+    private ExtractionContext setExtractionContext(int page, List<TextPosition> positions, PDDocument document) throws IOException {
         float avgFontSize = fontStats.getAverageFontSize(positions);
         float medianFontSize = fontStats.getMedianSize(positions);
-        return new ExtractionContext(positions, page, avgFontSize, medianFontSize);
+        LineCoordStatsResult lineCoordStatsResult = coordStats.getLineCoordStats(document);
+        return new ExtractionContext(positions, page, avgFontSize, medianFontSize, lineCoordStatsResult);
     }
 
 }
