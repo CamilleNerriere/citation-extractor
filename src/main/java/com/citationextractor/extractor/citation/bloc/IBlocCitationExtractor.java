@@ -5,7 +5,6 @@
 
 package com.citationextractor.extractor.citation.bloc;
 
-import com.citationextractor.model.citation.TroncatedCitation;
 import com.citationextractor.model.context.ExtractionContext;
 
 /**
@@ -14,5 +13,5 @@ import com.citationextractor.model.context.ExtractionContext;
  */
 public interface IBlocCitationExtractor {
     void extractCitationsPerPage(ExtractionContext context,
-                        TroncatedCitation troncatedCitationFromLastPage);
+                        StringBuilder troncatedCitationFromLastPage);
 }

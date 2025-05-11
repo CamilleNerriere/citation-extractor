@@ -23,11 +23,7 @@ public class TradCitationExtractor implements ITradCitationExtractor {
         String[] openingQuotes = { "«", "\"", "“" };
 
         for (String opening : openingQuotes) {
-            String content = (updatedTroncated != null && opening.equals(updatedTroncated.openingQuote()))
-                    ? updatedTroncated.content()
-                    : null;
-            TroncatedCitation troncatedToPass = new TroncatedCitation(content, opening);
-            TradCitationExtractionResult result = extractCitations(context, opening, troncatedToPass);
+            TradCitationExtractionResult result = extractCitations(context, opening, updatedTroncated);
             allCitations.addAll(result.citations());
 
             if (result.troncatedCitation().isEmpty() == false) {

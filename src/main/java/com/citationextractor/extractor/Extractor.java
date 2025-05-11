@@ -29,6 +29,7 @@ import com.citationextractor.model.result.AllTypeCitationsResult;
 import com.citationextractor.model.result.HarvardCitationExtractionResult;
 import com.citationextractor.model.result.TradCitationExtractionResult;
 import com.citationextractor.pdf.CustomTextStripper;
+import com.citationextractor.utils.ICoordStats;
 import com.citationextractor.utils.IFontStats;
 
 public class Extractor {
@@ -41,6 +42,7 @@ public class Extractor {
     private final IBlocCitationExtractor blocExtractor;
     private final IFootnoteExtractor footnoteExtractor;
     private final ITradCitationFootnoteAssociator footnoteAssociator;
+    private final ICoordStats coordStats;
 
     private static final Logger logger = LoggerFactory.getLogger(Extractor.class);
 
@@ -48,7 +50,7 @@ public class Extractor {
             final ITradCitationExtractor citationExtractor, final ITradCitationAnnotator citationAnnotator,
             final IHarvardCitationExtractor harvardExtractor, IBlocCitationExtractor blocExtractor,
             final IFootnoteExtractor footnoteExtractor,
-            ITradCitationFootnoteAssociator footnoteAssociator) {
+            ITradCitationFootnoteAssociator footnoteAssociator, ICoordStats coordStats) {
         this.fontStats = fontStats;
         this.noteDetector = noteDetector;
         this.citationExtractor = citationExtractor;
@@ -57,6 +59,7 @@ public class Extractor {
         this.blocExtractor = blocExtractor;
         this.footnoteExtractor = footnoteExtractor;
         this.footnoteAssociator = footnoteAssociator;
+        this.coordStats = coordStats; 
     }
 
     public AllTypeCitationsResult extractAll(PDDocument document) throws IOException {
@@ -67,6 +70,8 @@ public class Extractor {
             LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = extractHarvardCitations(document);
 
             // plug bloc citation to test
+            float medianXLineBegining = coordStats.getMedianXLineBegining(document);
+            logger.info("Line Beginning Median Value : {}", medianXLineBegining);
             ExtractBlocCitations(document);
 
             logger.info("Extraction ended with success");
@@ -96,6 +101,10 @@ public class Extractor {
 
             logger.debug("Analysing page {}", page);
             final int pageNum = page;
+
+            if (troncatedCitationFromLastPage.content() != null) {
+                logger.info("{}", troncatedCitationFromLastPage.content());
+            }
 
             CustomTextStripper stripper = new CustomTextStripper();
             stripper.setStartPage(page);
@@ -191,7 +200,7 @@ public class Extractor {
 
         LinkedHashMap<Integer, List<BlocCitation>> blocCitations = new LinkedHashMap<>();
 
-        TroncatedCitation troncatedCitationFromLastPage = new TroncatedCitation(null, null);
+        StringBuilder troncatedCitationFromLastPage = new StringBuilder();
 
         for (int page = 1; page <= pageCount; page++) {
 

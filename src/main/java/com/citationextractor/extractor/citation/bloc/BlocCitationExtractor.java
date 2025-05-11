@@ -5,7 +5,10 @@
 
 package com.citationextractor.extractor.citation.bloc;
 
-import com.citationextractor.model.citation.TroncatedCitation;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.citationextractor.model.citation.BlocCitation;
 import com.citationextractor.model.context.ExtractionContext;
 
 /**
@@ -15,7 +18,16 @@ import com.citationextractor.model.context.ExtractionContext;
 public class BlocCitationExtractor implements IBlocCitationExtractor {
     @Override
     public void extractCitationsPerPage(ExtractionContext context,
-            TroncatedCitation troncatedCitationFromLastPage) {
+            StringBuilder troncatedCitationFromLastPage) {
+                // 
+                List<BlocCitation> allCitations = new ArrayList<>();
+                StringBuilder updatedTroncated = troncatedCitationFromLastPage;
+
+                // C'est ici qu'on va récupérer les x de début et x de fin moyens
+
+                
+
+
                 
     }
 }

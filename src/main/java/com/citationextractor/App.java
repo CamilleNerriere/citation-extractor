@@ -26,7 +26,9 @@ import com.citationextractor.extractor.note.INoteDetector;
 import com.citationextractor.extractor.note.NoteDetector;
 import com.citationextractor.model.context.ExporterContext;
 import com.citationextractor.model.result.AllTypeCitationsResult;
+import com.citationextractor.utils.CoordStats;
 import com.citationextractor.utils.FontStats;
+import com.citationextractor.utils.ICoordStats;
 import com.citationextractor.utils.IFontStats;
 
 public class App {
@@ -72,9 +74,10 @@ public class App {
             IBlocCitationExtractor blocExtractor = new BlocCitationExtractor();
             IFootnoteExtractor footnoteExtractor = new FootnoteExtractor();
             ITradCitationFootnoteAssociator footnoteAssociator = new TradCitationFootnoteAssociator();
+            ICoordStats coordStats = new CoordStats();
 
             Extractor extractor = new Extractor(fontStats, noteDetector, citationExtractor, citationAnnotator,
-                    harvardExtractor, blocExtractor, footnoteExtractor, footnoteAssociator);
+                    harvardExtractor, blocExtractor, footnoteExtractor, footnoteAssociator, coordStats);
 
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
