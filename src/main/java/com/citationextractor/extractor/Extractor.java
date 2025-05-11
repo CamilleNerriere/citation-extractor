@@ -27,6 +27,7 @@ import com.citationextractor.model.context.ExtractionContext;
 import com.citationextractor.model.footnote.Footnote;
 import com.citationextractor.model.result.AllTypeCitationsResult;
 import com.citationextractor.model.result.HarvardCitationExtractionResult;
+import com.citationextractor.model.result.LineCoordStatsResult;
 import com.citationextractor.model.result.TradCitationExtractionResult;
 import com.citationextractor.pdf.CustomTextStripper;
 import com.citationextractor.utils.ICoordStats;
@@ -70,8 +71,8 @@ public class Extractor {
             LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = extractHarvardCitations(document);
 
             // plug bloc citation to test
-            float medianXLineBegining = coordStats.getMedianXLineBegining(document);
-            logger.info("Line Beginning Median Value : {}", medianXLineBegining);
+            LineCoordStatsResult lineCoordStatsResult = coordStats.getLineCoordStats(document);
+            logger.info("Line Beginning Median Value : {}, Line End Median Value : {}", lineCoordStatsResult.medianXLineBegining(), lineCoordStatsResult.medianXLineEnd());
             ExtractBlocCitations(document);
 
             logger.info("Extraction ended with success");

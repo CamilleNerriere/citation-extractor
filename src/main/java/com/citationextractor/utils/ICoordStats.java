@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 
+import com.citationextractor.model.result.LineCoordStatsResult;
+
 
 public interface ICoordStats {
-    float getMedianXLineBegining(PDDocument document) throws IOException;
-
-    float getMedianXLineEnd(PDDocument document) throws IOException;
+    LineCoordStatsResult getLineCoordStats(PDDocument document) throws IOException;
 }
