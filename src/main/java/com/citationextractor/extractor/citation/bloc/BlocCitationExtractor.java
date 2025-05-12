@@ -23,17 +23,17 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
 
         List<BlocCitation> blocCitations = getBlocCitations(allLines, context);
 
-        String truncCitation = getTruncatedBlocCitation(allLines, blocCitations, linesFromLastPage,
+        String mergedText = buildMergedBlocCitation(allLines, blocCitations, linesFromLastPage,
                 blocCitationsFromLastPage, context);
 
-
-
-        for (int i = 0; i < blocCitations.size(); i++) {
-            if(truncCitation == null) break;
-            BlocCitation citation = blocCitations.get(i);
-            if(truncCitation.contains(citation.getText())){
-                BlocCitation newCitation = new BlocCitation(truncCitation, citation.getPage(), citation.getStartPos(), citation.getEndPos());
-                blocCitations.set(i, newCitation);
+        if (mergedText != null) {
+            for (int i = 0; i < blocCitations.size(); i++) {
+                BlocCitation citation = blocCitations.get(i);
+                if (mergedText.contains(citation.getText())) {
+                    BlocCitation newCitation = new BlocCitation(mergedText, citation.getPage(), citation.getStartPos(),
+                            citation.getEndPos());
+                    blocCitations.set(i, newCitation);
+                }
             }
         }
 
@@ -74,6 +74,7 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
                 text.setLength(0);
                 firstPosInLine = positions.get(i);
                 linePositions.clear();
+                lineNumber++;
             }
 
             text.append(actualChar);
@@ -133,14 +134,12 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
         return blocCitations;
     }
 
-    private String getTruncatedBlocCitation(List<Line> allLines, List<BlocCitation> citationsFromActualPage,
+    private String buildMergedBlocCitation(List<Line> allLines, List<BlocCitation> citationsFromActualPage,
             List<Line> linesFromLastPage, List<BlocCitation> citationsFromLastPage, ExtractionContext context) {
 
         if (citationsFromActualPage.isEmpty() || citationsFromLastPage.isEmpty() || linesFromLastPage.isEmpty()) {
             return null;
         }
-
-        int page = context.getPage();
 
         List<Line> lastPageLinesWithoutFootnotes = getLinesWithoutFootnotesOrFootpage(linesFromLastPage, context);
 
@@ -159,7 +158,7 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
         String lastCitationFromLastPage = lastCitationOnLastPage.getText();
 
         if (firstCitationText.contains(firstLineText) && lastCitationFromLastPage.contains(lastLineTextFromLastPage)) {
-            String allText = lastCitationFromLastPage + firstCitationText;
+            String allText = lastCitationFromLastPage + " " + firstCitationText;
             return allText;
         }
 
@@ -168,6 +167,9 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
     }
 
     private List<Line> getLinesWithoutFootnotesOrFootpage(List<Line> lines, ExtractionContext context) {
+
+        if (lines.isEmpty())
+            return List.of();
 
         float medianFontSize = context.getMedianFontSize();
 
