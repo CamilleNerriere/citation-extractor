@@ -50,6 +50,10 @@ public class Line {
         return endPos.getYDirAdj();
     }
 
+    public float getMedianFontSize(){
+        return medianFontSize;
+    }
+
     @Override
     public String toString() {
         return "Citation{" +
@@ -59,6 +63,7 @@ public class Line {
                 ", YStart=" + getYStart() +
                 ", xEnd=" + getXEnd() +
                 ", YEnd=" + getYEnd() +
+                 ", mediamFontSize=" + medianFontSize +
                 '}';
     }
 }

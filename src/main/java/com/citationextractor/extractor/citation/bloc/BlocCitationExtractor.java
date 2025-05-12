@@ -15,19 +15,15 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
     public void extractCitationsPerPage(ExtractionContext context,
             StringBuilder troncatedCitationFromLastPage) {
 
-        List<BlocCitation> blocCitations = new ArrayList<>();
         StringBuilder updatedTroncated = troncatedCitationFromLastPage;
 
-        int page = context.getPage();
         List<TextPosition> positions = context.getPositions();
-        float medianXLineBegining = context.getLineCoordStatsResult().medianXLineBegining();
-        float medianXLineEnd = context.getLineCoordStatsResult().medianXLineEnd();
-
-        // récupérer le texte ligne par ligne
 
         List<Line> allLines = extractPageLines(positions);
 
-        System.out.println(allLines);
+        List<BlocCitation> blocCitations = getBlocCitations(allLines, context);
+
+        System.out.println(blocCitations);
     }
 
     private List<Line> extractPageLines(List<TextPosition> positions) {
@@ -80,4 +76,48 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
 
         return allLines;
     }
+
+    private List<BlocCitation> getBlocCitations(List<Line> allLines, ExtractionContext context) {
+
+        int page = context.getPage();
+        float medianXLineBegining = context.getLineCoordStatsResult().medianXLineBegining();
+        float medianXLineEnd = context.getLineCoordStatsResult().medianXLineEnd();
+
+        float medianFontSize = context.getMedianFontSize();
+
+        List<BlocCitation> blocCitations = new ArrayList<>();
+
+        List<Line> blocCitationLines = new ArrayList<>();
+
+        for (Line line : allLines) {
+            float xStartLine = line.getXStart();
+            float xEndLine = line.getXEnd();
+            
+            // il faut que je récupère la taille médiane des caractères sur la ligne 
+            float lineMedianFontSize = line.getMedianFontSize();
+
+            boolean isFootnote = lineMedianFontSize < 0.8 * medianFontSize;
+
+            if (xStartLine > medianXLineBegining && xEndLine < medianXLineEnd && !isFootnote) {
+                blocCitationLines.add(line);
+            } else if (!blocCitationLines.isEmpty()) {
+                StringBuilder text = new StringBuilder();
+                TextPosition startPos = blocCitationLines.get(0).getStartPos();
+                TextPosition endPos = blocCitationLines.get(blocCitationLines.size() -1).getEndPos();
+
+                for(Line citationLine : blocCitationLines){
+                    text.append(citationLine.getText());
+                }
+
+                BlocCitation blocCitation = new BlocCitation(text.toString(), page, startPos, endPos);
+                blocCitations.add(blocCitation);
+
+                blocCitationLines.clear();
+            }
+
+        }
+
+        return blocCitations;
+    }
+
 }
