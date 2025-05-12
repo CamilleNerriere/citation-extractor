@@ -23,10 +23,19 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
 
         List<BlocCitation> blocCitations = getBlocCitations(allLines, context);
 
-        BlocCitation truncCitation = getTruncatedBlocCitation(allLines, blocCitations, linesFromLastPage,
+        String truncCitation = getTruncatedBlocCitation(allLines, blocCitations, linesFromLastPage,
                 blocCitationsFromLastPage, context);
 
-        System.out.println(truncCitation);
+
+
+        for (int i = 0; i < blocCitations.size(); i++) {
+            if(truncCitation == null) break;
+            BlocCitation citation = blocCitations.get(i);
+            if(truncCitation.contains(citation.getText())){
+                BlocCitation newCitation = new BlocCitation(truncCitation, citation.getPage(), citation.getStartPos(), citation.getEndPos());
+                blocCitations.set(i, newCitation);
+            }
+        }
 
         return new BlocExtractionResult(blocCitations, allLines);
     }
@@ -124,7 +133,7 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
         return blocCitations;
     }
 
-    private BlocCitation getTruncatedBlocCitation(List<Line> allLines, List<BlocCitation> citationsFromActualPage,
+    private String getTruncatedBlocCitation(List<Line> allLines, List<BlocCitation> citationsFromActualPage,
             List<Line> linesFromLastPage, List<BlocCitation> citationsFromLastPage, ExtractionContext context) {
 
         if (citationsFromActualPage.isEmpty() || citationsFromLastPage.isEmpty() || linesFromLastPage.isEmpty()) {
@@ -151,10 +160,7 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
 
         if (firstCitationText.contains(firstLineText) && lastCitationFromLastPage.contains(lastLineTextFromLastPage)) {
             String allText = lastCitationFromLastPage + firstCitationText;
-            TextPosition startPos = lastCitationOnLastPage.getStartPos();
-            TextPosition endPos = firstCitationOnActualPage.getEndPos();
-
-            return new BlocCitation(allText, page, startPos, endPos);
+            return allText;
         }
 
         return null;
