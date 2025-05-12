@@ -7,104 +7,77 @@ import org.apache.pdfbox.text.TextPosition;
 
 import com.citationextractor.model.citation.BlocCitation;
 import com.citationextractor.model.context.ExtractionContext;
-import com.citationextractor.model.result.BlocCitationExtractionResult;
+import com.citationextractor.model.text.Line;
+import com.citationextractor.utils.FontStats;
 
 public class BlocCitationExtractor implements IBlocCitationExtractor {
     @Override
     public void extractCitationsPerPage(ExtractionContext context,
             StringBuilder troncatedCitationFromLastPage) {
-       
-                List<BlocCitation> allCitations = new ArrayList<>();
-                StringBuilder updatedTroncated = troncatedCitationFromLastPage;
 
-                int page = context.getPage();
-                List<TextPosition> positions = context.getPositions();
-                float medianXLineBegining = context.getLineCoordStatsResult().medianXLineBegining();
-                float medianXLineEnd = context.getLineCoordStatsResult().medianXLineEnd();
+        List<BlocCitation> blocCitations = new ArrayList<>();
+        StringBuilder updatedTroncated = troncatedCitationFromLastPage;
 
-                List<BlocCitation> blocCitations = new ArrayList<>();
-                
-                for (int i = 0; i < positions.size(); i++) {
-                    
-                    BlocCitationExtractionResult result = null;
-                    TextPosition firstPos = positions.get(i);
-                    String firstChar = firstPos.getUnicode();
+        int page = context.getPage();
+        List<TextPosition> positions = context.getPositions();
+        float medianXLineBegining = context.getLineCoordStatsResult().medianXLineBegining();
+        float medianXLineEnd = context.getLineCoordStatsResult().medianXLineEnd();
 
-                    StringBuilder citation = new StringBuilder();
+        // récupérer le texte ligne par ligne
 
-                    float xDiff = firstPos.getXDirAdj() - medianXLineBegining;
+        List<Line> allLines = extractPageLines(positions);
 
-                    // il faut vérifier si c'est le premier de sa ligne 
+        System.out.println(allLines);
+    }
 
-                    float lastX = i > 0 ? positions.get(i -1).getXDirAdj() : firstPos.getXDirAdj();
+    private List<Line> extractPageLines(List<TextPosition> positions) {
 
-                    if(xDiff > 20f & firstPos.getXDirAdj() - lastX > 20f){
+        List<Line> allLines = new ArrayList<>();
 
-                        // System.out.println("INDENTATION A GAUCHE");
-                        
-                        citation.append(firstChar);
-                        float xStart = firstPos.getXDirAdj();
+        if (positions.isEmpty())
+            return allLines;
 
-                        boolean isNewLine = false;
+        TextPosition firstPosInLine = positions.get(0);
 
-                        int j = i + 1;
-                        
-                        for (; j < positions.size(); j++) {
+        StringBuilder text = new StringBuilder();
 
-                            TextPosition secondPos = positions.get(j);
-                            String secondChar = secondPos.getUnicode();
+        List<TextPosition> linePositions = new ArrayList<>();
 
-                            float xEnd = secondPos.getXDirAdj();
+        int lineNumber = 1;
 
-                            float newXDiff = Math.abs(xEnd - xStart);
+        for (int i = 0; i < positions.size(); i++) {
+            TextPosition lastPosition = i > 0 ? positions.get(i - 1) : null;
+            TextPosition actualPosition = positions.get(i);
 
-                            // on vient quand on va passer à la ligne pour la première ligne
+            float lastPosX = lastPosition != null ? lastPosition.getXDirAdj() : actualPosition.getXDirAdj();
+            float actualPosX = actualPosition.getXDirAdj();
 
-                            // case 1 : we're one first line and have to check if we're really in a bloc citation
+            float xDiff = actualPosX - lastPosX;
 
-                            if(!isNewLine && !(newXDiff >= 1f)){
-                                isNewLine = true;
+            String actualChar = actualPosition.getUnicode();
 
-                                float lastCharX = positions.get(j-1).getXDirAdj();
+            if (xDiff < -20f) {
+                FontStats stats = new FontStats();
+                Line line = new Line(lineNumber, text.toString(), firstPosInLine, positions.get(i - 1),
+                        stats.getMedianSize(linePositions));
+                allLines.add(line);
+                text.setLength(0);
+                firstPosInLine = positions.get(i);
+                linePositions.clear();
+            }
 
-                                float xEndDiff = medianXLineBegining - lastCharX;
+            text.append(actualChar);
+            linePositions.add(actualPosition);
+        }
 
-                                if(!(xEndDiff > 10f)){
-                                    System.out.println("ON COUPE CE N'EST PAS UNE CITATION");
-                                    break;
-                                }
-                            }
+        if (!linePositions.isEmpty()) {
+            FontStats stats = new FontStats();
+            Line line = new Line(lineNumber, text.toString(), firstPosInLine,
+                    linePositions.get(linePositions.size() - 1),
+                    stats.getMedianSize(linePositions));
+            allLines.add(line);
+        }
 
-                            float Xref = firstPos.getXDirAdj();
-                            float actualX = secondPos.getXDirAdj();
-
-                            float XDiff3 = actualX - Xref;
-
-                            // case 2 : we encountered a new line with regular x -> citation ends
-
-                            if(XDiff3 < -3f){
-                                BlocCitation blocCitation = new BlocCitation(citation.toString(), page, firstPos, secondPos);
-                                allCitations.add(blocCitation);
-                                updatedTroncated.setLength(0);
-                                break;
-                            }
-
-                            // case 3 : citation not ended : we keep adding
-                            citation.append(secondChar);
-                            
-                            // truncated citation to handle next page
-                            if(citation.length() > 0){
-                                updatedTroncated = citation;
-                            }
-                            
-                        }
-                        i = j - 1;
-                    }
-
-
-                }
-
-                System.out.println(allCitations);
-                
+        return allLines;
     }
 }
