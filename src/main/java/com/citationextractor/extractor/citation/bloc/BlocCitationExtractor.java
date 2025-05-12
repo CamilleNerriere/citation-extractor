@@ -2,20 +2,20 @@ package com.citationextractor.extractor.citation.bloc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.text.TextPosition;
 
 import com.citationextractor.model.citation.BlocCitation;
 import com.citationextractor.model.context.ExtractionContext;
+import com.citationextractor.model.result.BlocExtractionResult;
 import com.citationextractor.model.text.Line;
 import com.citationextractor.utils.FontStats;
 
 public class BlocCitationExtractor implements IBlocCitationExtractor {
     @Override
-    public void extractCitationsPerPage(ExtractionContext context,
-            StringBuilder troncatedCitationFromLastPage) {
-
-        StringBuilder updatedTroncated = troncatedCitationFromLastPage;
+    public BlocExtractionResult extractCitationsPerPage(ExtractionContext context,
+            List<Line> linesFromLastPage, List<BlocCitation> blocCitationsFromLastPage) {
 
         List<TextPosition> positions = context.getPositions();
 
@@ -23,7 +23,12 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
 
         List<BlocCitation> blocCitations = getBlocCitations(allLines, context);
 
-        System.out.println(blocCitations);
+        BlocCitation truncCitation = getTruncatedBlocCitation(allLines, blocCitations, linesFromLastPage,
+                blocCitationsFromLastPage, context);
+
+        System.out.println(truncCitation);
+
+        return new BlocExtractionResult(blocCitations, allLines);
     }
 
     private List<Line> extractPageLines(List<TextPosition> positions) {
@@ -92,20 +97,19 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
         for (Line line : allLines) {
             float xStartLine = line.getXStart();
             float xEndLine = line.getXEnd();
-            
-            // il faut que je récupère la taille médiane des caractères sur la ligne 
+
             float lineMedianFontSize = line.getMedianFontSize();
 
-            boolean isFootnote = lineMedianFontSize < 0.8 * medianFontSize;
+            boolean isFootnote = lineMedianFontSize < 0.85 * medianFontSize;
 
             if (xStartLine > medianXLineBegining && xEndLine < medianXLineEnd && !isFootnote) {
                 blocCitationLines.add(line);
             } else if (!blocCitationLines.isEmpty()) {
                 StringBuilder text = new StringBuilder();
                 TextPosition startPos = blocCitationLines.get(0).getStartPos();
-                TextPosition endPos = blocCitationLines.get(blocCitationLines.size() -1).getEndPos();
+                TextPosition endPos = blocCitationLines.get(blocCitationLines.size() - 1).getEndPos();
 
-                for(Line citationLine : blocCitationLines){
+                for (Line citationLine : blocCitationLines) {
                     text.append(citationLine.getText());
                 }
 
@@ -118,6 +122,54 @@ public class BlocCitationExtractor implements IBlocCitationExtractor {
         }
 
         return blocCitations;
+    }
+
+    private BlocCitation getTruncatedBlocCitation(List<Line> allLines, List<BlocCitation> citationsFromActualPage,
+            List<Line> linesFromLastPage, List<BlocCitation> citationsFromLastPage, ExtractionContext context) {
+
+        if (citationsFromActualPage.isEmpty() || citationsFromLastPage.isEmpty() || linesFromLastPage.isEmpty()) {
+            return null;
+        }
+
+        int page = context.getPage();
+
+        List<Line> lastPageLinesWithoutFootnotes = getLinesWithoutFootnotesOrFootpage(linesFromLastPage, context);
+
+        BlocCitation firstCitationOnActualPage = citationsFromActualPage.get(0);
+        BlocCitation lastCitationOnLastPage = citationsFromLastPage.get(citationsFromLastPage.size() - 1);
+
+        if (firstCitationOnActualPage == null || lastCitationOnLastPage == null) {
+            return null;
+        }
+
+        String firstLineText = allLines.get(0).getText();
+        String firstCitationText = firstCitationOnActualPage.getText();
+
+        String lastLineTextFromLastPage = lastPageLinesWithoutFootnotes.get(lastPageLinesWithoutFootnotes.size() - 1)
+                .getText();
+        String lastCitationFromLastPage = lastCitationOnLastPage.getText();
+
+        if (firstCitationText.contains(firstLineText) && lastCitationFromLastPage.contains(lastLineTextFromLastPage)) {
+            String allText = lastCitationFromLastPage + firstCitationText;
+            TextPosition startPos = lastCitationOnLastPage.getStartPos();
+            TextPosition endPos = firstCitationOnActualPage.getEndPos();
+
+            return new BlocCitation(allText, page, startPos, endPos);
+        }
+
+        return null;
+
+    }
+
+    private List<Line> getLinesWithoutFootnotesOrFootpage(List<Line> lines, ExtractionContext context) {
+
+        float medianFontSize = context.getMedianFontSize();
+
+        return lines.stream()
+                .filter(l -> l.getText().length() >= 20)
+                .filter(l -> l.getMedianFontSize() >= 0.85 * medianFontSize)
+                .collect(Collectors.toList());
+
     }
 
 }

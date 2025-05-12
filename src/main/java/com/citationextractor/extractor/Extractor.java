@@ -1,6 +1,7 @@
 package com.citationextractor.extractor;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -26,9 +27,11 @@ import com.citationextractor.model.citation.TroncatedCitation;
 import com.citationextractor.model.context.ExtractionContext;
 import com.citationextractor.model.footnote.Footnote;
 import com.citationextractor.model.result.AllTypeCitationsResult;
+import com.citationextractor.model.result.BlocExtractionResult;
 import com.citationextractor.model.result.HarvardCitationExtractionResult;
 import com.citationextractor.model.result.LineCoordStatsResult;
 import com.citationextractor.model.result.TradCitationExtractionResult;
+import com.citationextractor.model.text.Line;
 import com.citationextractor.pdf.CustomTextStripper;
 import com.citationextractor.utils.ICoordStats;
 import com.citationextractor.utils.IFontStats;
@@ -199,7 +202,8 @@ public class Extractor {
 
         LinkedHashMap<Integer, List<BlocCitation>> blocCitations = new LinkedHashMap<>();
 
-        StringBuilder troncatedCitationFromLastPage = new StringBuilder();
+        List<Line> linesFromLastPage = new ArrayList<>();
+        List<BlocCitation> citationsFromLastPage = new ArrayList<>();
 
         for (int page = 1; page <= pageCount; page++) {
 
@@ -217,8 +221,11 @@ public class Extractor {
             List<TextPosition> positions = stripper.getTextPositions();
             ExtractionContext context = setExtractionContext(page, positions, document);
 
-            blocExtractor.extractCitationsPerPage(context,
-                    troncatedCitationFromLastPage);
+            BlocExtractionResult result = blocExtractor.extractCitationsPerPage(context,
+                     linesFromLastPage, citationsFromLastPage);
+
+            linesFromLastPage = result.lines();
+            citationsFromLastPage = result.citation();
 
             // HarvardCitationExtractionResult harvardCitationsResult =
             // harvardExtractor.extractCitationsPerPage(context,

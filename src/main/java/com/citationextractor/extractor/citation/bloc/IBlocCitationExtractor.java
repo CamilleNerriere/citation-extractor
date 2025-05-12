@@ -5,13 +5,18 @@
 
 package com.citationextractor.extractor.citation.bloc;
 
+import java.util.List;
+
+import com.citationextractor.model.citation.BlocCitation;
 import com.citationextractor.model.context.ExtractionContext;
+import com.citationextractor.model.result.BlocExtractionResult;
+import com.citationextractor.model.text.Line;
 
 /**
  *
  * @author camille
  */
 public interface IBlocCitationExtractor {
-    void extractCitationsPerPage(ExtractionContext context,
-                        StringBuilder troncatedCitationFromLastPage);
+    BlocExtractionResult extractCitationsPerPage(ExtractionContext context,
+                            List<Line> linesFromLastPage, List<BlocCitation> citationsFromLastPage) ;
 }
