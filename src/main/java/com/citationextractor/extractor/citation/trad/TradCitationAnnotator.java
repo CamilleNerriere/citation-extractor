@@ -9,8 +9,7 @@ import com.citationextractor.model.citation.Citation;
 import com.citationextractor.model.citation.NoteCandidate;
 import com.citationextractor.model.context.ExtractionContext;
 
-
-public class TradCitationAnnotator implements ITradCitationAnnotator{
+public class TradCitationAnnotator implements ITradCitationAnnotator {
 
     @Override
     public List<AnnotatedTradCitation> getAnnotatedCitations(
@@ -33,10 +32,10 @@ public class TradCitationAnnotator implements ITradCitationAnnotator{
                 Float xNote = note.getX();
                 Float yNote = note.getY();
 
-                float dx = xNote - xCitationEnd;
+                float dx = Math.abs(xNote - xCitationEnd);
                 float dy = Math.abs(yNote - yCitation);
 
-                if (dx >= -1 && dx < 20 && dy < 25) {
+                if (dx < 25 && dy < 10) {
                     AnnotatedTradCitation annotatedCitation = new AnnotatedTradCitation(citation, note.getText());
                     sortedCitations.add(annotatedCitation);
                 }
