@@ -82,7 +82,7 @@ public class Extractor {
         try {
             LinkedHashMap<Integer, List<TradCitationWithNote>> tradCitations = extractTradCitations(document);
             LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = extractHarvardCitations(document);
-            LinkedHashMap<Integer, List<BlocCitationWithNote>> blocCitation = ExtractBlocCitations(document);    
+            LinkedHashMap<Integer, List<BlocCitationWithNote>> blocCitation = extractBlocCitations(document);    
 
             logger.info("Extraction ended with success");
             return new AllTypeCitationsResult(harvardCitations, tradCitations, blocCitation);
@@ -202,7 +202,7 @@ public class Extractor {
         return harvardCitations;
     }
 
-    private LinkedHashMap<Integer, List<BlocCitationWithNote>> ExtractBlocCitations(PDDocument document) throws IOException {
+    private LinkedHashMap<Integer, List<BlocCitationWithNote>> extractBlocCitations(PDDocument document) throws IOException {
 
         logger.debug("Starting bloc citations extraction");
 
