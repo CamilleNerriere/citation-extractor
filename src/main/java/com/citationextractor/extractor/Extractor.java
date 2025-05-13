@@ -10,6 +10,7 @@ import org.apache.pdfbox.text.TextPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.citationextractor.extractor.citation.bloc.IBlocCitationAnnotator;
 import com.citationextractor.extractor.citation.bloc.IBlocCitationExtractor;
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationAnnotator;
@@ -17,6 +18,7 @@ import com.citationextractor.extractor.citation.trad.ITradCitationExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationFootnoteAssociator;
 import com.citationextractor.extractor.footnote.IFootnoteExtractor;
 import com.citationextractor.extractor.note.INoteDetector;
+import com.citationextractor.model.citation.AnnotatedBlocCitation;
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
 import com.citationextractor.model.citation.AnnotatedTradCitation;
 import com.citationextractor.model.citation.BlocCitation;
@@ -44,6 +46,7 @@ public class Extractor {
     private final ITradCitationAnnotator citationAnnotator;
     private final IHarvardCitationExtractor harvardExtractor;
     private final IBlocCitationExtractor blocExtractor;
+    private final IBlocCitationAnnotator blocCitationAnnotator;
     private final IFootnoteExtractor footnoteExtractor;
     private final ITradCitationFootnoteAssociator footnoteAssociator;
     private final ICoordStats coordStats;
@@ -53,6 +56,7 @@ public class Extractor {
     public Extractor(final IFontStats fontStats, final INoteDetector noteDetector,
             final ITradCitationExtractor citationExtractor, final ITradCitationAnnotator citationAnnotator,
             final IHarvardCitationExtractor harvardExtractor, IBlocCitationExtractor blocExtractor,
+            IBlocCitationAnnotator blocCitationAnnotator,
             final IFootnoteExtractor footnoteExtractor,
             ITradCitationFootnoteAssociator footnoteAssociator, ICoordStats coordStats) {
         this.fontStats = fontStats;
@@ -61,6 +65,7 @@ public class Extractor {
         this.citationAnnotator = citationAnnotator;
         this.harvardExtractor = harvardExtractor;
         this.blocExtractor = blocExtractor;
+        this.blocCitationAnnotator = blocCitationAnnotator;
         this.footnoteExtractor = footnoteExtractor;
         this.footnoteAssociator = footnoteAssociator;
         this.coordStats = coordStats;
@@ -201,6 +206,8 @@ public class Extractor {
         int pageCount = document.getNumberOfPages();
 
         LinkedHashMap<Integer, List<BlocCitation>> blocCitations = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<AnnotatedBlocCitation>> foundCitations = new LinkedHashMap<>();
 
         List<Line> linesFromLastPage = new ArrayList<>();
         List<BlocCitation> citationsFromLastPage = new ArrayList<>();
@@ -221,11 +228,20 @@ public class Extractor {
             List<TextPosition> positions = stripper.getTextPositions();
             ExtractionContext context = setExtractionContext(page, positions, document);
 
+            // 1 - Get the blocs
             BlocExtractionResult result = blocExtractor.extractCitationsPerPage(context,
-                     linesFromLastPage, citationsFromLastPage);
+                    linesFromLastPage, citationsFromLastPage);
 
             linesFromLastPage = result.lines();
             citationsFromLastPage = result.citation();
+            blocCitations.put(page, result.citation());
+
+            // 2 - Get the notes candidates
+            notesCandidatesPerPage.put(page, noteDetector.getNoteCandidates(context));
+
+            // 3 - Associate bloc citations and notes and eleminate false positive
+            foundCitations.put(page,
+                    blocCitationAnnotator.getAnnotatedCitations(blocCitations, notesCandidatesPerPage, context));
 
             // HarvardCitationExtractionResult harvardCitationsResult =
             // harvardExtractor.extractCitationsPerPage(context,
@@ -241,9 +257,14 @@ public class Extractor {
             // });
 
         }
+        // System.out.println(blocCitations.get(8).get(0).getXEnd());
+        // System.out.print(notesCandidatesPerPage.get(8).get(0).toString());
+        System.out.println(foundCitations);
+
     }
 
-    private ExtractionContext setExtractionContext(int page, List<TextPosition> positions, PDDocument document) throws IOException {
+    private ExtractionContext setExtractionContext(int page, List<TextPosition> positions, PDDocument document)
+            throws IOException {
         float avgFontSize = fontStats.getAverageFontSize(positions);
         float medianFontSize = fontStats.getMedianSize(positions);
         LineCoordStatsResult lineCoordStatsResult = coordStats.getLineCoordStats(document);

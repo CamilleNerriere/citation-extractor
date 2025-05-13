@@ -1,28 +1,26 @@
-package com.citationextractor.extractor.citation.trad;
+package com.citationextractor.extractor.citation.bloc;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import com.citationextractor.model.citation.AnnotatedTradCitation;
-import com.citationextractor.model.citation.Citation;
+import com.citationextractor.model.citation.AnnotatedBlocCitation;
+import com.citationextractor.model.citation.BlocCitation;
 import com.citationextractor.model.citation.NoteCandidate;
 import com.citationextractor.model.context.ExtractionContext;
 
-
-public class TradCitationAnnotator implements ITradCitationAnnotator{
-
+public class BlocCitationAnnotator implements IBlocCitationAnnotator {
     @Override
-    public List<AnnotatedTradCitation> getAnnotatedCitations(
-            LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage,
+    public List<AnnotatedBlocCitation> getAnnotatedCitations(
+            LinkedHashMap<Integer, List<BlocCitation>> citationsCandidatesPerPage,
             LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage, ExtractionContext context) {
-
-        List<AnnotatedTradCitation> sortedCitations = new ArrayList<>();
+                        
+        List<AnnotatedBlocCitation> sortedCitations = new ArrayList<>();
         int page = context.getPage();
 
-        List<Citation> citations = citationsCandidatesPerPage.get(page);
+        List<BlocCitation> citations = citationsCandidatesPerPage.get(page);
 
-        for (Citation citation : citations) {
+        for (BlocCitation citation : citations) {
 
             float xCitationEnd = citation.getXEnd();
             float yCitation = citation.getYEnd();
@@ -37,12 +35,14 @@ public class TradCitationAnnotator implements ITradCitationAnnotator{
                 float dy = Math.abs(yNote - yCitation);
 
                 if (dx < 35 && dy < 10) {
-                    AnnotatedTradCitation annotatedCitation = new AnnotatedTradCitation(citation, note.getText());
+                    AnnotatedBlocCitation annotatedCitation = new AnnotatedBlocCitation(citation, note.getText());
                     sortedCitations.add(annotatedCitation);
                 }
             }
 
         }
+
         return sortedCitations;
+
     }
 }
