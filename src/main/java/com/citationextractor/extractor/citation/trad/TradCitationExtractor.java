@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.pdfbox.text.TextPosition;
 
-import com.citationextractor.model.citation.Citation;
+import com.citationextractor.model.citation.TradCitation;
 import com.citationextractor.model.citation.TroncatedCitation;
 import com.citationextractor.model.context.ExtractionContext;
 import com.citationextractor.model.result.OneTradCitationResult;
@@ -17,7 +17,7 @@ public class TradCitationExtractor implements ITradCitationExtractor {
     public TradCitationExtractionResult extractCitationsPerPage(ExtractionContext context,
             TroncatedCitation troncatedCitationFromLastPage) {
 
-        List<Citation> allCitations = new ArrayList<>();
+        List<TradCitation> allCitations = new ArrayList<>();
         TroncatedCitation updatedTroncated = troncatedCitationFromLastPage;
 
         String[] openingQuotes = { "«", "\"", "“" };
@@ -41,7 +41,7 @@ public class TradCitationExtractor implements ITradCitationExtractor {
     private TradCitationExtractionResult extractCitations(ExtractionContext context, String openingQuote,
             TroncatedCitation troncatedCitationFromLastPage) {
 
-        List<Citation> citations = new ArrayList<>();
+        List<TradCitation> citations = new ArrayList<>();
 
         String truncContent = troncatedCitationFromLastPage.content();
         String truncOpeningQuote = troncatedCitationFromLastPage.openingQuote();
@@ -125,7 +125,7 @@ public class TradCitationExtractor implements ITradCitationExtractor {
         }
 
         if (isClosed) {
-            Citation citation = new Citation(citationContent.toString().trim(), context.getPage(),
+            TradCitation citation = new TradCitation(citationContent.toString().trim(), context.getPage(),
                     firstChar, lastChar, c1);
             TroncatedCitation trunc = new TroncatedCitation(null, null);
             return new OneTradCitationResult(citation, trunc);

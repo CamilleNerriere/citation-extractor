@@ -2,24 +2,24 @@ package com.citationextractor.annotator;
 
 
 import com.citationextractor.model.citation.AnnotatedTradCitation;
-import com.citationextractor.model.citation.Citation;
+import com.citationextractor.model.citation.TradCitation;
 
 
 
-public class TradCitationAnnotator extends GenericCitationAnnotator<Citation, AnnotatedTradCitation> implements ICitationAnnotator<Citation, AnnotatedTradCitation>{
+public class TradCitationAnnotator extends GenericCitationAnnotator<TradCitation, AnnotatedTradCitation> implements ICitationAnnotator<TradCitation, AnnotatedTradCitation>{
 
      @Override
-    protected float getXEnd(Citation citation) {
+    protected float getXEnd(TradCitation citation) {
         return citation.getXEnd();
     }
 
     @Override
-    protected float getYEnd(Citation citation) {
+    protected float getYEnd(TradCitation citation) {
         return citation.getYEnd();
     }
 
     @Override
-    protected AnnotatedTradCitation createAnnotated(Citation citation, String noteText) {
+    protected AnnotatedTradCitation createAnnotated(TradCitation citation, String noteText) {
         return new AnnotatedTradCitation(citation, noteText);
     }
 }

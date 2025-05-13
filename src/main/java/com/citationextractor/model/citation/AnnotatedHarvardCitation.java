@@ -1,15 +1,15 @@
 package com.citationextractor.model.citation;
 
 public class AnnotatedHarvardCitation {
-    private final Citation baseCitation;
+    private final TradCitation baseCitation;
     private final String noteContent;
 
-    public AnnotatedHarvardCitation(final Citation baseCitation, final String noteContent){
+    public AnnotatedHarvardCitation(final TradCitation baseCitation, final String noteContent){
         this.baseCitation = baseCitation;
         this.noteContent = noteContent;
     }
 
-    public Citation getBaseCitation(){
+    public TradCitation getBaseCitation(){
         return baseCitation;
     }
 

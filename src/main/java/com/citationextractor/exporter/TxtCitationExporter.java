@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
-import com.citationextractor.model.citation.CitationWithNote;
+import com.citationextractor.model.citation.TradCitationWithNote;
 import com.citationextractor.model.context.ExporterContext;
 
 public class TxtCitationExporter implements ICitationExporter {
@@ -28,7 +28,7 @@ public class TxtCitationExporter implements ICitationExporter {
 
     @Override
     public void export() {
-        LinkedHashMap<Integer, List<CitationWithNote>> tradCitations = context.getTradCitations();
+        LinkedHashMap<Integer, List<TradCitationWithNote>> tradCitations = context.getTradCitations();
         LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = context.getHarvardCitations();
         String outPutPath = context.getOutputPath();
 
@@ -54,13 +54,13 @@ public class TxtCitationExporter implements ICitationExporter {
             txt.append(System.lineSeparator());
 
             // Classical
-            List<CitationWithNote> classical = tradCitations.get(page);
+            List<TradCitationWithNote> classical = tradCitations.get(page);
             if (classical != null && !classical.isEmpty()) {
                 txt.append(System.lineSeparator());
                 txt.append("--------------Classical Type Citation------------");
                 txt.append(System.lineSeparator());
 
-                for (CitationWithNote citation : classical) {
+                for (TradCitationWithNote citation : classical) {
                     String cit = citation.getBaseAnnotatedCitation().getBaseCitation().getText();
                     String noteNumber = citation.getBaseAnnotatedCitation().getNoteNumber();
                     String footnote = citation.getFootnote();

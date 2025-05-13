@@ -1,10 +1,10 @@
 package com.citationextractor.model.citation;
 
-public class CitationWithNote {
+public class TradCitationWithNote {
     private final AnnotatedTradCitation baseAnnotatedCitation;
     private final String footnote;
 
-    public CitationWithNote(final AnnotatedTradCitation baseAnnotatedCitation, final String footnote){
+    public TradCitationWithNote(final AnnotatedTradCitation baseAnnotatedCitation, final String footnote){
         this.baseAnnotatedCitation = baseAnnotatedCitation;
         this.footnote = footnote;
     }

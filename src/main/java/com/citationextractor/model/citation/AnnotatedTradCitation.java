@@ -1,15 +1,15 @@
 package com.citationextractor.model.citation;
 
 public class AnnotatedTradCitation {
-    private final Citation baseCitation;
+    private final TradCitation baseCitation;
     private final String noteNumberAString;
 
-    public AnnotatedTradCitation(final Citation baseCitation, final String noteNumberAString){
+    public AnnotatedTradCitation(final TradCitation baseCitation, final String noteNumberAString){
         this.baseCitation = baseCitation;
         this.noteNumberAString = noteNumberAString;
     }
 
-    public Citation getBaseCitation(){
+    public TradCitation getBaseCitation(){
         return baseCitation;
     }
 

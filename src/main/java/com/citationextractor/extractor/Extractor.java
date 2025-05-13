@@ -14,16 +14,17 @@ import com.citationextractor.annotator.ICitationAnnotator;
 import com.citationextractor.extractor.citation.bloc.IBlocCitationExtractor;
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationExtractor;
-import com.citationextractor.extractor.citation.trad.ITradCitationFootnoteAssociator;
 import com.citationextractor.extractor.footnote.IFootnoteExtractor;
 import com.citationextractor.extractor.note.INoteDetector;
+import com.citationextractor.footnoteAssociator.IFootnoteAssociator;
 import com.citationextractor.model.citation.AnnotatedBlocCitation;
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
 import com.citationextractor.model.citation.AnnotatedTradCitation;
 import com.citationextractor.model.citation.BlocCitation;
-import com.citationextractor.model.citation.Citation;
-import com.citationextractor.model.citation.CitationWithNote;
+import com.citationextractor.model.citation.BlocCitationWithNote;
 import com.citationextractor.model.citation.NoteCandidate;
+import com.citationextractor.model.citation.TradCitation;
+import com.citationextractor.model.citation.TradCitationWithNote;
 import com.citationextractor.model.citation.TroncatedCitation;
 import com.citationextractor.model.context.ExtractionContext;
 import com.citationextractor.model.footnote.Footnote;
@@ -42,22 +43,26 @@ public class Extractor {
     private final IFontStats fontStats;
     private final INoteDetector noteDetector;
     private final ITradCitationExtractor citationExtractor;
-    private final ICitationAnnotator<Citation, AnnotatedTradCitation> citationAnnotator;
+    private final ICitationAnnotator<TradCitation, AnnotatedTradCitation> citationAnnotator;
     private final IHarvardCitationExtractor harvardExtractor;
     private final IBlocCitationExtractor blocExtractor;
     private final ICitationAnnotator<BlocCitation, AnnotatedBlocCitation> blocCitationAnnotator;
     private final IFootnoteExtractor footnoteExtractor;
-    private final ITradCitationFootnoteAssociator footnoteAssociator;
+    private final IFootnoteAssociator<TradCitationWithNote, AnnotatedTradCitation, Footnote> tradFootnoteAssociator;
+    private final IFootnoteAssociator<BlocCitationWithNote, AnnotatedBlocCitation, Footnote> blocFootnoteAssociator;
     private final ICoordStats coordStats;
 
     private static final Logger logger = LoggerFactory.getLogger(Extractor.class);
 
     public Extractor(final IFontStats fontStats, final INoteDetector noteDetector,
-            final ITradCitationExtractor citationExtractor, final ICitationAnnotator<Citation, AnnotatedTradCitation>citationAnnotator,
+            final ITradCitationExtractor citationExtractor,
+            final ICitationAnnotator<TradCitation, AnnotatedTradCitation> citationAnnotator,
             final IHarvardCitationExtractor harvardExtractor, IBlocCitationExtractor blocExtractor,
             ICitationAnnotator<BlocCitation, AnnotatedBlocCitation> blocCitationAnnotator,
             final IFootnoteExtractor footnoteExtractor,
-            ITradCitationFootnoteAssociator footnoteAssociator, ICoordStats coordStats) {
+            IFootnoteAssociator<TradCitationWithNote, AnnotatedTradCitation, Footnote> tradFootnoteAssociator,
+            IFootnoteAssociator<BlocCitationWithNote, AnnotatedBlocCitation, Footnote> blocFootnoteAssociator,
+            ICoordStats coordStats) {
         this.fontStats = fontStats;
         this.noteDetector = noteDetector;
         this.citationExtractor = citationExtractor;
@@ -66,7 +71,8 @@ public class Extractor {
         this.blocExtractor = blocExtractor;
         this.blocCitationAnnotator = blocCitationAnnotator;
         this.footnoteExtractor = footnoteExtractor;
-        this.footnoteAssociator = footnoteAssociator;
+        this.tradFootnoteAssociator = tradFootnoteAssociator;
+        this.blocFootnoteAssociator = blocFootnoteAssociator;
         this.coordStats = coordStats;
     }
 
@@ -74,14 +80,12 @@ public class Extractor {
 
         logger.info("Begin Extraction");
         try {
-            LinkedHashMap<Integer, List<CitationWithNote>> tradCitations = extractTradCitations(document);
+            LinkedHashMap<Integer, List<TradCitationWithNote>> tradCitations = extractTradCitations(document);
             LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = extractHarvardCitations(document);
-
-            // plug bloc citation to test
-            ExtractBlocCitations(document);
+            LinkedHashMap<Integer, List<BlocCitationWithNote>> blocCitation = ExtractBlocCitations(document);    
 
             logger.info("Extraction ended with success");
-            return new AllTypeCitationsResult(harvardCitations, tradCitations);
+            return new AllTypeCitationsResult(harvardCitations, tradCitations, blocCitation);
         } catch (IOException e) {
             logger.error("I/O Error during extraction ", e);
             throw new RuntimeException("Error during extraction", e);
@@ -89,14 +93,14 @@ public class Extractor {
 
     }
 
-    private LinkedHashMap<Integer, List<CitationWithNote>> extractTradCitations(PDDocument document)
+    private LinkedHashMap<Integer, List<TradCitationWithNote>> extractTradCitations(PDDocument document)
             throws IOException {
 
         logger.debug("Starting trad citations extraction");
 
         int pageCount = document.getNumberOfPages();
 
-        LinkedHashMap<Integer, List<Citation>> citationsCandidatesPerPage = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<TradCitation>> citationsCandidatesPerPage = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<AnnotatedTradCitation>> foundCitations = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<Footnote>> footnotesPerPage = new LinkedHashMap<>();
@@ -149,7 +153,7 @@ public class Extractor {
         }
 
         // finally : associate citation with footnote
-        LinkedHashMap<Integer, List<CitationWithNote>> citationWithNote = footnoteAssociator
+        LinkedHashMap<Integer, List<TradCitationWithNote>> citationWithNote = tradFootnoteAssociator
                 .associateCitationWithFootnote(foundCitations, footnotesPerPage);
 
         return citationWithNote;
@@ -198,7 +202,7 @@ public class Extractor {
         return harvardCitations;
     }
 
-    private void ExtractBlocCitations(PDDocument document) throws IOException {
+    private LinkedHashMap<Integer, List<BlocCitationWithNote>> ExtractBlocCitations(PDDocument document) throws IOException {
 
         logger.debug("Starting bloc citations extraction");
 
@@ -207,6 +211,7 @@ public class Extractor {
         LinkedHashMap<Integer, List<BlocCitation>> blocCitations = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<NoteCandidate>> notesCandidatesPerPage = new LinkedHashMap<>();
         LinkedHashMap<Integer, List<AnnotatedBlocCitation>> foundCitations = new LinkedHashMap<>();
+        LinkedHashMap<Integer, List<Footnote>> footnotesPerPage = new LinkedHashMap<>();
 
         List<Line> linesFromLastPage = new ArrayList<>();
         List<BlocCitation> citationsFromLastPage = new ArrayList<>();
@@ -242,21 +247,22 @@ public class Extractor {
             foundCitations.put(page,
                     blocCitationAnnotator.getAnnotatedCitations(blocCitations, notesCandidatesPerPage, context));
 
-            // HarvardCitationExtractionResult harvardCitationsResult =
-            // harvardExtractor.extractCitationsPerPage(context,
-            // troncatedCitationFromLastPage);
+            // 4- Get footnote content associated with note number
+            footnotesPerPage.put(page, footnoteExtractor.getFootnotes(context, notesCandidatesPerPage));
 
-            // // harvardCitations.put(page, harvardCitationsResult.harvardCitations());
-            // troncatedCitationFromLastPage = harvardCitationsResult.troncatedCitation();
-
-            // blocCitations.get(page).forEach(citation -> {
-            // logger.debug("Citation trouvée page {} : \"{}...\"", pageNum,
-            // citation.getBaseCitation().getText().substring(0,
-            // Math.min(40, citation.getBaseCitation().getText().length())));
-            // });
+            blocCitations.get(page).forEach(citation -> {
+                logger.debug("Citation trouvée page {} : \"{}...\"", pageNum,
+                        citation.getText().substring(0, Math.min(40, citation.getText().length())));
+            });
 
         }
-        System.out.println(foundCitations);
+
+        // 5 - Associate Citation with its footnote
+
+        LinkedHashMap<Integer, List<BlocCitationWithNote>> citationWithNote = blocFootnoteAssociator
+                .associateCitationWithFootnote(foundCitations, footnotesPerPage);
+
+        return citationWithNote;
 
     }
 
