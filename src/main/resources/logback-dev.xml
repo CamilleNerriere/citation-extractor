@@ -8,7 +8,7 @@
     </appender>
 
     <!-- Mute DEBUG logs for FontBox -->
-    <logger name="org.apache.fontbox.ttf.gsub" level="ERROR" />
+    <logger name="org.apache.fontbox" level="WARN" />
 
     <!-- Root logger: change level here if needed (INFO, DEBUG, ERROR) -->
     <root level="DEBUG">

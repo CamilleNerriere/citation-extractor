@@ -6,7 +6,7 @@ import java.util.List;
 import org.apache.pdfbox.text.TextPosition;
 
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
-import com.citationextractor.model.citation.Citation;
+import com.citationextractor.model.citation.TradCitation;
 import com.citationextractor.model.citation.TroncatedCitation;
 import com.citationextractor.model.context.ExtractionContext;
 import com.citationextractor.model.result.HarvardCitationExtractionResult;
@@ -137,7 +137,7 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
                     lastCharIndex);
         }
 
-        Citation citation = new Citation(citationContent.toString().trim(), context.getPage(),
+        TradCitation citation = new TradCitation(citationContent.toString().trim(), context.getPage(),
                 firstChar, lastChar, c1);
 
         return new OnePotentialCitationResult(citation, new TroncatedCitation(null, null), lastCharIndex);
@@ -145,7 +145,7 @@ public class HarvardCitationExtractor implements IHarvardCitationExtractor {
     }
 
 
-    private AnnotatedHarvardCitation extractOneHarvardCitation(ExtractionContext context, Citation citation,
+    private AnnotatedHarvardCitation extractOneHarvardCitation(ExtractionContext context, TradCitation citation,
             int start) {
 
         List<TextPosition> positions = context.getPositions();

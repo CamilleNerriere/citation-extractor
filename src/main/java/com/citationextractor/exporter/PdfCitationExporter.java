@@ -15,7 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
-import com.citationextractor.model.citation.CitationWithNote;
+import com.citationextractor.model.citation.BlocCitationWithNote;
+import com.citationextractor.model.citation.TradCitationWithNote;
 import com.citationextractor.model.context.ExporterContext;
 
 public class PdfCitationExporter implements ICitationExporter {
@@ -25,7 +26,7 @@ public class PdfCitationExporter implements ICitationExporter {
     private static final float MARGIN = 50;
     private static final float START_Y = 750;
     private static final float LINE_HEIGHT = 14.5f;
-    private static final float BOTTOM_MARGIN = 50;
+    private static final float BOTTOM_MARGIN = 30;
 
     private static final Logger logger = LoggerFactory.getLogger(PdfCitationExporter.class);
 
@@ -42,7 +43,8 @@ public class PdfCitationExporter implements ICitationExporter {
             PDType0Font boldFont = PDType0Font.load(document,
                     getClass().getResourceAsStream("/fonts/LiberationSerif-Bold.ttf"));
 
-            LinkedHashMap<Integer, List<CitationWithNote>> tradCitations = context.getTradCitations();
+            LinkedHashMap<Integer, List<TradCitationWithNote>> tradCitations = context.getTradCitations();
+            LinkedHashMap<Integer, List<BlocCitationWithNote>> blocCitations = context.getBlocCitations();
             LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = context.getHarvardCitations();
             String outputPath = context.getOutputPath();
             Set<Integer> allPages = new TreeSet<>();
@@ -62,13 +64,15 @@ public class PdfCitationExporter implements ICitationExporter {
             yPosRef[0] -= LINE_HEIGHT;
 
             for (int pageNum : allPages) {
-                List<CitationWithNote> classical = tradCitations.get(pageNum);
+                List<TradCitationWithNote> classical = tradCitations.get(pageNum);
                 List<AnnotatedHarvardCitation> harvard = harvardCitations.get(pageNum);
+                List<BlocCitationWithNote> bloc = blocCitations.get(pageNum);
 
                 boolean hasClassical = classical != null && !classical.isEmpty();
                 boolean hasHarvard = harvard != null && !harvard.isEmpty();
+                boolean hasBloc = bloc != null && !bloc.isEmpty();
 
-                if (!hasClassical && !hasHarvard)
+                if (!hasClassical && !hasHarvard && !hasBloc)
                     continue;
 
                 cs = writeCenteredLine(document, cs, boldFont, 14, "Page " + pageNum, yPosRef);
@@ -80,7 +84,28 @@ public class PdfCitationExporter implements ICitationExporter {
                     cs = addLineBreak(cs, yPosRef, 1);
                     yPosRef[0] -= LINE_HEIGHT;
 
-                    for (CitationWithNote citation : classical) {
+                    for (TradCitationWithNote citation : classical) {
+                        String cit = citation.getBaseAnnotatedCitation().getBaseCitation().getText();
+                        String noteNumber = citation.getBaseAnnotatedCitation().getNoteNumber();
+                        String footnote = citation.getFootnote();
+
+                        cs = writeLines(document, cs, boldFont, 12, "Note " + noteNumber + " :", yPosRef);
+                        cs = writeLines(document, cs, regularFont, 12, cit, yPosRef);
+                        cs = writeLines(document, cs, boldFont, 12, "Footnote :", yPosRef);
+                        cs = writeLines(document, cs, regularFont, 12, footnote, yPosRef);
+                        yPosRef[0] -= LINE_HEIGHT;
+                        cs = addLineBreak(cs, yPosRef, 1);
+                    }
+                }
+
+                cs = addLineBreak(cs, yPosRef, 1);
+
+                if (hasBloc && bloc != null) {
+                    cs = writeLines(document, cs, boldFont, 13, "----- Bloc Type Citation -----", yPosRef);
+                    cs = addLineBreak(cs, yPosRef, 1);
+                    yPosRef[0] -= LINE_HEIGHT;
+
+                    for (BlocCitationWithNote citation : bloc) {
                         String cit = citation.getBaseAnnotatedCitation().getBaseCitation().getText();
                         String noteNumber = citation.getBaseAnnotatedCitation().getNoteNumber();
                         String footnote = citation.getFootnote();

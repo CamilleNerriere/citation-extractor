@@ -3,14 +3,14 @@ package com.citationextractor.model.citation;
 
 import org.apache.pdfbox.text.TextPosition;
 
-public class Citation {
+public class TradCitation {
     private final String text;
     private final int page;
     private final TextPosition startPos; // premier caractère
     private final TextPosition endPos; // dernier caractère
     private final String openingQuote;
 
-    public Citation(final String text, final int page, final TextPosition startPos, final TextPosition endPos, final String openingQuote) {
+    public TradCitation(final String text, final int page, final TextPosition startPos, final TextPosition endPos, final String openingQuote) {
         this.text = text;
         this.page = page;
         this.startPos = startPos;

@@ -1,20 +1,20 @@
 package com.citationextractor.model.citation;
 
-public class AnnotatedHarvardCitation {
-    private final TradCitation baseCitation;
-    private final String noteContent;
+public class AnnotatedBlocCitation {
+    private final BlocCitation baseCitation;
+    private final String noteNumberAString;
 
-    public AnnotatedHarvardCitation(final TradCitation baseCitation, final String noteContent){
+    public AnnotatedBlocCitation(final BlocCitation baseCitation, final String noteNumberAString){
         this.baseCitation = baseCitation;
-        this.noteContent = noteContent;
+        this.noteNumberAString = noteNumberAString;
     }
 
-    public TradCitation getBaseCitation(){
+    public BlocCitation getBaseCitation(){
         return baseCitation;
     }
 
-    public String getNoteContent(){
-        return noteContent;
+    public String getNoteNumber(){
+        return noteNumberAString;
     }
 
     @Override
@@ -24,7 +24,7 @@ public class AnnotatedHarvardCitation {
                 ", page=" + baseCitation.getPage() +
                 ", endX=" + baseCitation.getXEnd() +
                 ", endY=" + baseCitation.getYEnd() +
-                ", note=" + noteContent + 
+                ", note=" + noteNumberAString + 
                 '}';
     }
 }
