@@ -10,10 +10,9 @@ import org.apache.pdfbox.text.TextPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.citationextractor.extractor.citation.bloc.IBlocCitationAnnotator;
+import com.citationextractor.annotator.ICitationAnnotator;
 import com.citationextractor.extractor.citation.bloc.IBlocCitationExtractor;
 import com.citationextractor.extractor.citation.harvard.IHarvardCitationExtractor;
-import com.citationextractor.extractor.citation.trad.ITradCitationAnnotator;
 import com.citationextractor.extractor.citation.trad.ITradCitationExtractor;
 import com.citationextractor.extractor.citation.trad.ITradCitationFootnoteAssociator;
 import com.citationextractor.extractor.footnote.IFootnoteExtractor;
@@ -43,10 +42,10 @@ public class Extractor {
     private final IFontStats fontStats;
     private final INoteDetector noteDetector;
     private final ITradCitationExtractor citationExtractor;
-    private final ITradCitationAnnotator citationAnnotator;
+    private final ICitationAnnotator<Citation, AnnotatedTradCitation> citationAnnotator;
     private final IHarvardCitationExtractor harvardExtractor;
     private final IBlocCitationExtractor blocExtractor;
-    private final IBlocCitationAnnotator blocCitationAnnotator;
+    private final ICitationAnnotator<BlocCitation, AnnotatedBlocCitation> blocCitationAnnotator;
     private final IFootnoteExtractor footnoteExtractor;
     private final ITradCitationFootnoteAssociator footnoteAssociator;
     private final ICoordStats coordStats;
@@ -54,9 +53,9 @@ public class Extractor {
     private static final Logger logger = LoggerFactory.getLogger(Extractor.class);
 
     public Extractor(final IFontStats fontStats, final INoteDetector noteDetector,
-            final ITradCitationExtractor citationExtractor, final ITradCitationAnnotator citationAnnotator,
+            final ITradCitationExtractor citationExtractor, final ICitationAnnotator<Citation, AnnotatedTradCitation>citationAnnotator,
             final IHarvardCitationExtractor harvardExtractor, IBlocCitationExtractor blocExtractor,
-            IBlocCitationAnnotator blocCitationAnnotator,
+            ICitationAnnotator<BlocCitation, AnnotatedBlocCitation> blocCitationAnnotator,
             final IFootnoteExtractor footnoteExtractor,
             ITradCitationFootnoteAssociator footnoteAssociator, ICoordStats coordStats) {
         this.fontStats = fontStats;
@@ -257,8 +256,6 @@ public class Extractor {
             // });
 
         }
-        // System.out.println(blocCitations.get(8).get(0).getXEnd());
-        // System.out.print(notesCandidatesPerPage.get(8).get(0).toString());
         System.out.println(foundCitations);
 
     }
