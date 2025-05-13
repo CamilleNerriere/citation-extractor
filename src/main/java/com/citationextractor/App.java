@@ -93,7 +93,7 @@ public class App {
             AllTypeCitationsResult citationsPerPage = extractor.extractAll(document);
 
             ExporterContext exporterContext = new ExporterContext(citationsPerPage.tradCitations(),
-                    citationsPerPage.harvardCitations(), outputPath);
+                    citationsPerPage.harvardCitations(), citationsPerPage.blocCitations(), outputPath);
 
             ExporterFactory exporterFactory = new ExporterFactory();
 

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.citationextractor.model.citation.AnnotatedHarvardCitation;
+import com.citationextractor.model.citation.BlocCitationWithNote;
 import com.citationextractor.model.citation.TradCitationWithNote;
 import com.citationextractor.model.context.ExporterContext;
 
@@ -29,6 +30,7 @@ public class TxtCitationExporter implements ICitationExporter {
     @Override
     public void export() {
         LinkedHashMap<Integer, List<TradCitationWithNote>> tradCitations = context.getTradCitations();
+        LinkedHashMap<Integer, List<BlocCitationWithNote>> blocCitations = context.getBlocCitations();
         LinkedHashMap<Integer, List<AnnotatedHarvardCitation>> harvardCitations = context.getHarvardCitations();
         String outPutPath = context.getOutputPath();
 
@@ -43,9 +45,10 @@ public class TxtCitationExporter implements ICitationExporter {
         for (int page : allPages) {
 
             boolean hasClassical = tradCitations.get(page) != null && !tradCitations.get(page).isEmpty();
+            boolean hasBloc = blocCitations.get(page) != null && !blocCitations.get(page).isEmpty();
             boolean hasHarvard = harvardCitations.get(page) != null && !harvardCitations.get(page).isEmpty();
 
-            if (!hasClassical && !hasHarvard) {
+            if (!hasClassical && !hasHarvard && !hasBloc) {
                 continue;
             }
 
@@ -89,6 +92,26 @@ public class TxtCitationExporter implements ICitationExporter {
                     txt.append(System.lineSeparator());
                 }
             }
+
+            // Bloc
+            List<BlocCitationWithNote> bloc = blocCitations.get(page);
+            if (bloc != null && !bloc.isEmpty()) {
+                txt.append(System.lineSeparator());
+                txt.append("--------------Bloc Type Citation------------");
+                txt.append(System.lineSeparator());
+
+                for (BlocCitationWithNote citation : bloc) {
+                    String cit = citation.getBaseAnnotatedCitation().getBaseCitation().getText();
+                    String noteNumber = citation.getBaseAnnotatedCitation().getNoteNumber();
+                    String footnote = citation.getFootnote();
+
+                    txt.append(System.lineSeparator());
+                    txt.append("Note ").append(noteNumber).append(" : ").append(cit).append("\n");
+                    txt.append("Footnote : ").append(footnote);
+                    txt.append(System.lineSeparator());
+                }
+            }
+
         }
 
         try {
