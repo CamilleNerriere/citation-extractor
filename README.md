@@ -4,7 +4,7 @@ A simple command-line tool to automatically extract quotations (classical and Ha
 
 ## Features
 
-- Detects classical quotations between quotation marks and associate them with their extracted footnote.
+- Detects classical quotations between quotation marks and bloc-style quotation and associate them with their extracted footnote.
 - Detects Harvard-style quotations (quotes + inline reference)
 - Supports multi-page documents and truncated quotes
 - Outputs results in `.txt` or `.pdf` format
